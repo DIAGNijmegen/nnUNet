@@ -253,7 +253,7 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
         then be read (and finally deleted) by the Process. save_segmentation_nifti_from_softmax can take either 
         filename or np.ndarray and will handle this automatically"""
 
-        if use_alt_resampling():
+        if use_alt_resampling:
             results.append(save_segmentation_nifti_from_softmax(
                 softmax, output_filename, dct, interpolation_order, region_class_order,
                 None, None,
