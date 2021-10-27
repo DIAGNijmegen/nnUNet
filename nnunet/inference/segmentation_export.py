@@ -21,6 +21,8 @@ import numpy as np
 import SimpleITK as sitk
 from batchgenerators.augmentations.utils import resize_segmentation
 from nnunet.preprocessing.preprocessing import get_lowres_axis, get_do_separate_z, resample_data_or_seg
+from nnunet.preprocessing.alt import resample_data_or_seg as alt_resample_data_or_seg
+from nnunet.utilities.switches import use_alt_resampling
 from batchgenerators.utilities.file_and_folder_operations import *
 
 
@@ -101,9 +103,11 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
             do_separate_z = False
 
         if verbose: print("separate z:", do_separate_z, "lowres axis", lowres_axis)
-        seg_old_spacing = resample_data_or_seg(segmentation_softmax, shape_original_after_cropping, is_seg=False,
-                                               axis=lowres_axis, order=order, do_separate_z=do_separate_z,
-                                               order_z=interpolation_order_z)
+        resample_fn = alt_resample_data_or_seg if use_alt_resampling() else resample_data_or_seg
+        seg_old_spacing = resample_fn(segmentation_softmax, shape_original_after_cropping, is_seg=False,
+                                      axis=lowres_axis, order=order, do_separate_z=do_separate_z,
+                                      order_z=interpolation_order_z)
+        del segmentation_softmax
         # seg_old_spacing = resize_softmax_output(segmentation_softmax, shape_original_after_cropping, order=order)
     else:
         if verbose: print("no resampling necessary")
