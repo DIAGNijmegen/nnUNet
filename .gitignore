@@ -113,3 +113,9 @@ ENV/
 
 *.model
 
+# required for test resources (small resources only...)
+!/tests/docker/requirements.txt
+!/tests/resources/input_data/**/*.nii.gz
+/tests/resources/pretrained/*
+!/tests/resources/pretrained/*.manifest
+!/tests/resources/results/**/*.nii.gz
