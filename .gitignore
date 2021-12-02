@@ -119,3 +119,4 @@ ENV/
 /tests/resources/pretrained/*
 !/tests/resources/pretrained/*.manifest
 !/tests/resources/results/**/*.nii.gz
+!/tests/resources/license.txt
