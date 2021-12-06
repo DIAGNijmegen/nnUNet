@@ -1,5 +1,3 @@
-from typing import Dict
-
 from pathlib import Path
 
 import pytest
@@ -10,9 +8,12 @@ from nnunet.inference.pretrained_models.download_pretrained_model import (
     print_available_pretrained_models,
     get_available_models,
 )
+from utils import is_data_integrity_ok_md5sum
 
 
-TASK004_HIPPOCAMPUS_PRETRAINED_DIR = Path(__file__).parent / "resources" / "pretrained" / "Task004_Hippocampus"
+TASK004_HIPPOCAMPUS_PRETRAINED_DIR = (
+    Path(__file__).parent / "resources" / "pretrained" / "Task004_Hippocampus"
+)
 TASK004_HIPPOCAMPUS_MANIFEST_DIR = Path(__file__).parent / "resources" / "pretrained"
 
 AVAILABLE_MODELS = [
@@ -45,26 +46,15 @@ AVAILABLE_MODELS = [
 ]
 
 
-def read_manifest_file(file_path: Path) -> Dict[Path, int]:
-    with open(file_path, "r") as f:
-        data = f.readlines()
-    file_dict = {}
-    for line in data:
-        file_name, file_size_bytes = line.strip().rsplit(" ", 1)
-        file_dict[Path(file_name)] = int(file_size_bytes)
-    return file_dict
-
-
 @pytest.mark.parametrize("taskname", ("Task004_Hippocampus",))
 def test_nnunet_download_pretrained(tmp_path: Path, taskname: str):
-    manifest = read_manifest_file(TASK004_HIPPOCAMPUS_MANIFEST_DIR / (taskname + ".manifest"))
-    nnunet.inference.pretrained_models.download_pretrained_model.network_training_output_dir = str(tmp_path)
+    nnunet.inference.pretrained_models.download_pretrained_model.network_training_output_dir = str(
+        tmp_path / taskname
+    )
     download_and_install_pretrained_model_by_name(taskname=taskname)
-
-    assert any(manifest.keys())
-    for file_path, file_size in manifest.items():
-        assert (tmp_path / file_path).is_file()
-        assert (tmp_path / file_path).stat().st_size == file_size
+    assert is_data_integrity_ok_md5sum(
+        workdir=tmp_path, md5file=TASK004_HIPPOCAMPUS_MANIFEST_DIR / (taskname + ".md5")
+    )
 
 
 def test_nnunet_get_available_pretrained_models():

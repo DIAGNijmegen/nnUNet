@@ -11,7 +11,7 @@ from nnunet.inference.predict_simple import main
 
 RESOURCES_DIR = Path(__file__).parent / "resources"
 TASK004_HIPPOCAMPUS_PRETRAINED_DIR = RESOURCES_DIR / "pretrained" / "Task004_Hippocampus"
-TEST_INPUT_FOLDER = RESOURCES_DIR / "input_data" / "Task04_Hippocampus" / "imagesTs"
+TEST_INPUT_FOLDER = RESOURCES_DIR / "input_data" / "Task004_Hippocampus" / "imagesTs"
 TEST_REF_FOLDER = RESOURCES_DIR / "results"
 
 
