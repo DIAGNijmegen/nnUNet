@@ -38,15 +38,15 @@ fi
 if [ $integrityResult -ne 0 ]; then
   echo "# Test resources are missing, start bootstrapping all test files..."
   docker run -it --rm -e "PYTHONPATH=${CODEBASE_DIR}" -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/bootstrap.py"
+  echo "# Testing if bootstrapped test resources are valid..."
   docker run -it --rm -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
   integrityResult="$?"
   if [ $integrityResult -ne 0 ]; then
     echo "Integrity test failed after bootstrapping the files, aborting now..."
     exit 1
   fi
-else
-  echo "# All required test resources present..."
 fi
+echo "# All required test resources present..."
 
 # Run all tests
 echo "# Running all tests using docker image: '${DOCKER_DEV_IMAGE}'"
