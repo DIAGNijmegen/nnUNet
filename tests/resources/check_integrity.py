@@ -10,7 +10,9 @@ SOURCE_TAR_FILE_MD5 = b"9d24dba78a72977dbd1d2e110310f31b"
 
 
 def print_download_instructions():
-    print("Download the original file here: https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2")
+    print(
+        "Download the original file here: https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2"
+    )
     print(f"And place it in the following directory: {SOURCE_TAR_FILE.parent}")
 
 
@@ -19,15 +21,21 @@ def check_source_file_ok_or_exit():
         print(f"Missing the source TAR file to bootstrap from: {SOURCE_TAR_FILE.name}")
         print_download_instructions()
         sys.exit(2)
-    result = sp.run(["md5sum", str(SOURCE_TAR_FILE)], cwd=str(SOURCE_TAR_FILE.parent), stdout=sp.PIPE)
-    if result.stdout[:len(SOURCE_TAR_FILE_MD5)] != SOURCE_TAR_FILE_MD5:
-        print(f"Found the source TAR file ({SOURCE_TAR_FILE.name}), but it does not match its MD5 hash ({SOURCE_TAR_FILE_MD5})!")
+    result = sp.run(
+        ["md5sum", str(SOURCE_TAR_FILE)],
+        cwd=str(SOURCE_TAR_FILE.parent),
+        stdout=sp.PIPE,
+    )
+    if result.stdout[: len(SOURCE_TAR_FILE_MD5)] != SOURCE_TAR_FILE_MD5:
+        print(
+            f"Found the source TAR file ({SOURCE_TAR_FILE.name}), but it does not match its MD5 hash ({SOURCE_TAR_FILE_MD5})!"
+        )
         print_download_instructions()
         sys.exit(2)
 
 
 def is_data_integrity_ok_md5sum(workdir: Path, md5file: Path) -> bool:
-    result = sp.run(["md5sum", "--check", str(md5file)], cwd=str(workdir), stdout=sp.DEVNULL)
+    result = sp.run(["md5sum", "--check", "--quiet", str(md5file)], cwd=str(workdir))
     return result.returncode == 0
 
 
