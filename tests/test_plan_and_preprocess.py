@@ -12,7 +12,7 @@ from nnunet.experiment_planning.nnUNet_convert_decathlon_task import (
     main as convert_main,
 )
 
-from utils import is_data_integrity_ok_md5sum, are_plan_files_roughly_the_same
+from utils import is_data_integrity_ok_md5sum, is_data_present_md5
 
 
 RESOURCES_DIR = Path(__file__).parent / "resources"
@@ -48,14 +48,17 @@ def test_plan_and_preprocess(tmp_path: Path):
         workdir=TMP_CROPPED_DIR,
         md5file=NNUNET_CROPPED_DATA_DIR / "Task004_Hippocampus.md5",
     )
+    assert is_data_present_md5(
+        workdir=TMP_CROPPED_DIR,
+        md5file=NNUNET_CROPPED_DATA_DIR / "Task004_Hippocampus_other.md5",
+        ref_pickle_path=NNUNET_CROPPED_DATA_DIR,
+    )
     assert is_data_integrity_ok_md5sum(
         workdir=TMP_PREPROCESSING_DIR,
         md5file=NNUNET_PREPROCESSING_DATA_DIR / "Task004_Hippocampus.md5",
     )
-    # Test the two differing plan files independently
-    DIFFERING_FILES = ("nnUNetPlansv2.1_plans_2D.pkl", "nnUNetPlansv2.1_plans_3D.pkl")
-    for fn in DIFFERING_FILES:
-        assert are_plan_files_roughly_the_same(
-            filepath=TMP_PREPROCESSING_DIR / "Task004_Hippocampus" / fn,
-            ref_filepath=NNUNET_PREPROCESSING_DATA_DIR / "Task004_Hippocampus" / fn,
-        )
+    assert is_data_present_md5(
+        workdir=TMP_PREPROCESSING_DIR,
+        md5file=NNUNET_PREPROCESSING_DATA_DIR / "Task004_Hippocampus_other.md5",
+        ref_pickle_path=NNUNET_PREPROCESSING_DATA_DIR,
+    )

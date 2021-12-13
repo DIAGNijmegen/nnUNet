@@ -16,7 +16,7 @@ from nnunet.training.network_training.nnUNet_variants.tests.nnUNetTrainerV2_test
 from utils import (
     is_data_integrity_ok_md5sum,
     is_data_present_md5,
-    are_plan_files_roughly_the_same,
+    are_pickle_files_roughly_the_same,
 )
 
 
@@ -124,6 +124,6 @@ def check_expected_training_output(check_dir: Path, network: str, fold: int = 0)
         / "Task004_Hippocampus"
         / f"nnUNetPlansv2.1_plans_{plan_tag}.pkl"
     )
-    assert are_plan_files_roughly_the_same(
+    assert are_pickle_files_roughly_the_same(
         filepath=check_dir_sub / "plans.pkl", ref_filepath=ref_filepath
     )

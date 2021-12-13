@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 RESOURCE_DIR = Path(__file__).parent
+CROPPED_DATA_DIR = RESOURCE_DIR / "nnUNet" / "nnUNet_cropped_data"
 PREPROCESSED_DATA_DIR = RESOURCE_DIR / "nnUNet" / "nnUNet_preprocessed_data"
 SOURCE_TAR_FILE = RESOURCE_DIR / "input_data" / "Task04_Hippocampus.tar"
 SOURCE_TAR_FILE_MD5 = b"9d24dba78a72977dbd1d2e110310f31b"
@@ -11,7 +12,8 @@ SOURCE_TAR_FILE_MD5 = b"9d24dba78a72977dbd1d2e110310f31b"
 
 def print_download_instructions():
     print(
-        "Download the original file here: https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2"
+        "Download the original file here: "
+        "https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2"
     )
     print(f"And place it in the following directory: {SOURCE_TAR_FILE.parent}")
 
@@ -28,7 +30,8 @@ def check_source_file_ok_or_exit():
     )
     if result.stdout[: len(SOURCE_TAR_FILE_MD5)] != SOURCE_TAR_FILE_MD5:
         print(
-            f"Found the source TAR file ({SOURCE_TAR_FILE.name}), but it does not match its MD5 hash ({SOURCE_TAR_FILE_MD5})!"
+            f"Found the source TAR file ({SOURCE_TAR_FILE.name}), "
+            f"but it does not match its MD5 hash ({SOURCE_TAR_FILE_MD5})!"
         )
         print_download_instructions()
         sys.exit(2)
@@ -37,6 +40,25 @@ def check_source_file_ok_or_exit():
 def is_data_integrity_ok_md5sum(workdir: Path, md5file: Path) -> bool:
     result = sp.run(["md5sum", "--check", "--quiet", str(md5file)], cwd=str(workdir))
     return result.returncode == 0
+
+
+def is_data_present_md5(workdir: Path, md5file: Path) -> bool:
+    with open(md5file, "r") as f:
+        data = f.readlines()
+    for line in data:
+        filepath = Path(line.split("  ")[1].strip())
+        if not (workdir / filepath).is_file():
+            print(f"{filepath} does not exist in {workdir}")
+            return False
+        else:
+            print(f"{filepath}: OK")
+    return True
+
+
+def is_data_present_or_exit(workdir: Path, md5file: Path):
+    if not is_data_present_md5(workdir=workdir, md5file=md5file):
+        print(f"File missing for {md5file}, exiting...")
+        sys.exit(1)
 
 
 def check_if_ok_or_exit(workdir: Path, md5file: Path):
@@ -66,25 +88,19 @@ def check_integrity():
         md5file=RESOURCE_DIR / "pretrained" / "Task004_Hippocampus.md5",
     )
     check_if_ok_or_exit(
-        workdir=RESOURCE_DIR / "nnUNet" / "nnUNet_cropped_data",
-        md5file=RESOURCE_DIR
-        / "nnUNet"
-        / "nnUNet_cropped_data"
-        / "Task004_Hippocampus.md5",
+        workdir=CROPPED_DATA_DIR, md5file=CROPPED_DATA_DIR / "Task004_Hippocampus.md5",
+    )
+    is_data_present_or_exit(
+        workdir=CROPPED_DATA_DIR,
+        md5file=CROPPED_DATA_DIR / "Task004_Hippocampus_other.md5",
     )
     check_if_ok_or_exit(
         workdir=PREPROCESSED_DATA_DIR,
         md5file=PREPROCESSED_DATA_DIR / "Task004_Hippocampus.md5",
     )
-    check_if_file_exists_or_exit(
-        filepath=PREPROCESSED_DATA_DIR
-        / "Task004_Hippocampus"
-        / "nnUNetPlansv2.1_plans_2D.pkl"
-    )
-    check_if_file_exists_or_exit(
-        filepath=PREPROCESSED_DATA_DIR
-        / "Task004_Hippocampus"
-        / "nnUNetPlansv2.1_plans_3D.pkl"
+    is_data_present_or_exit(
+        workdir=PREPROCESSED_DATA_DIR,
+        md5file=PREPROCESSED_DATA_DIR / "Task004_Hippocampus_other.md5",
     )
 
 
