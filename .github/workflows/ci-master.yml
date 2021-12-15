@@ -1,0 +1,14 @@
+name: "ci-master"
+
+on: [push, pull_request]
+
+jobs:
+  run_tests:
+    name: "DockerImageCheckCPU"
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build test environment and run all tests
+        run: |
+          chmod +x ./tests/run_tests.sh
+          ./tests/run_tests.sh
