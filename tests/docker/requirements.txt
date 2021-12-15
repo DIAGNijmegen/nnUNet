@@ -12,5 +12,6 @@ pandas
 requests
 nibabel
 tifffile
+matplotlib
 
 pytest
