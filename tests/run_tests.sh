@@ -6,6 +6,27 @@ TEST_RESOURCES_DIR="${SCRIPT_DIR}/resources"
 TEST_RESOURCES_PRETRAINED_DIR="${TEST_RESOURCES_DIR}/pretrained/Task004_Hippocampus"
 CODEBASE_DIR=`realpath "${SCRIPT_DIR}/../"`
 DOCKER_DEV_IMAGE="nnunet_dev_image:latest"
+BUILD_DOCKER=0
+FORCE_BOOTSTRAP=0
+
+# Process optional arguments
+while [ $# -ne 0 ]
+do
+  case "$1" in
+    --build-docker)
+      BUILD_DOCKER=1
+      ;;
+    --force-bootstrap)
+      FORCE_BOOTSTRAP=1
+      ;;
+    *)
+      echo "invalid option: $1"
+      exit 0
+      ;;
+  esac
+  shift
+done
+
 
 # Display help and warnings
 echo "!!! Warning: This script generates a Docker image and downloads and bootstraps the required test files if they aren't present."
@@ -16,6 +37,10 @@ echo "!!! The other test files are bootstrapped from a 28MB tar file and require
 echo "!!! The required Docker image can take up to 11GB and will be given the tag: ${DOCKER_DEV_IMAGE}"
 
 # Test if test environment docker image is present, otherwise build it
+if [ $BUILD_DOCKER -eq 1 ]; then
+  echo "# --build-docker option specified, building '${DOCKER_DEV_IMAGE}'..."
+  docker build "${SCRIPT_DIR}/docker" --tag="${DOCKER_DEV_IMAGE}"
+fi
 if [[ "`docker images -q nnunet_dev_image:latest`" == "" ]]; then
   echo "# no '${DOCKER_DEV_IMAGE}' docker image found, building..."
   docker build "${SCRIPT_DIR}/docker" --tag="${DOCKER_DEV_IMAGE}"
@@ -28,15 +53,22 @@ if [[ "`docker images -q ${DOCKER_DEV_IMAGE}`" == "" ]]; then
 fi
 
 # Test if all required test files are present, otherwise download/bootstrap them...
-echo "# Testing if test resources are present..."
-docker run -t --rm -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
-integrityResult="$?"
-if [ $integrityResult -eq 2 ]; then
-  echo "# Missing the source TAR file, please download and install that first..."
-  exit 1
+if [ $FORCE_BOOTSTRAP -eq 0 ]; then
+  echo "# Testing if test resources are present..."
+  docker run -t --rm -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
+  integrityResult="$?"
+  if [ $integrityResult -eq 2 ]; then
+    echo "# Missing the source TAR file, please download and install that first..."
+    exit 1
+  fi
+  if [ $integrityResult -ne 0 ]; then
+    echo "# Test resources are missing, start bootstrapping all test files..."
+  fi
+else
+  echo "# Force bootstrap specified, start bootstrapping all test files..."
+  integrityResult=1
 fi
 if [ $integrityResult -ne 0 ]; then
-  echo "# Test resources are missing, start bootstrapping all test files..."
   docker run -t --rm -e "PYTHONPATH=${CODEBASE_DIR}" -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/bootstrap.py"
   echo "# Testing if bootstrapped test resources are valid..."
   docker run -t --rm -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
