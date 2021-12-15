@@ -29,7 +29,7 @@ fi
 
 # Test if all required test files are present, otherwise download/bootstrap them...
 echo "# Testing if test resources are present..."
-docker run -it --rm -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
+docker run -t --rm -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
 integrityResult="$?"
 if [ $integrityResult -eq 2 ]; then
   echo "# Missing the source TAR file, please download and install that first..."
@@ -37,9 +37,9 @@ if [ $integrityResult -eq 2 ]; then
 fi
 if [ $integrityResult -ne 0 ]; then
   echo "# Test resources are missing, start bootstrapping all test files..."
-  docker run -it --rm -e "PYTHONPATH=${CODEBASE_DIR}" -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/bootstrap.py"
+  docker run -t --rm -e "PYTHONPATH=${CODEBASE_DIR}" -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/bootstrap.py"
   echo "# Testing if bootstrapped test resources are valid..."
-  docker run -it --rm -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
+  docker run -t --rm -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
   integrityResult="$?"
   if [ $integrityResult -ne 0 ]; then
     echo "Integrity test failed after bootstrapping the files, aborting now..."
@@ -50,4 +50,4 @@ echo "# All required test resources present..."
 
 # Run all tests
 echo "# Running all tests using docker image: '${DOCKER_DEV_IMAGE}'"
-docker run -it --rm --runtime=nvidia -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 -m pytest "${CODEBASE_DIR}/tests"
+docker run -t --rm --runtime=nvidia -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 -m pytest "${CODEBASE_DIR}/tests"
