@@ -86,4 +86,4 @@ echo "# All required test resources present..."
 
 # Run all tests
 echo "# Running all tests using docker image: '${DOCKER_DEV_IMAGE}'"
-docker run -t --rm ${CPU_TEST} -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 -m pytest "${CODEBASE_DIR}/tests"
+docker run -t --rm ${CPU_TEST} --shm-size=8g -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 -m pytest "${CODEBASE_DIR}/tests"
