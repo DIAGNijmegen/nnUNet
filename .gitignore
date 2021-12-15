@@ -116,6 +116,7 @@ ENV/
 # required for test resources (small resources only, with the exeption of Task04_Hippocampus.tar)
 !/tests/docker/requirements.txt
 /tests/resources/input_data/*
+!/tests/resources/input_data/Task04_Hippocampus.tar
 !/tests/resources/input_data/*.md5
 /tests/resources/pretrained/*
 !/tests/resources/pretrained/*.md5
