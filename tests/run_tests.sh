@@ -73,7 +73,7 @@ else
   integrityResult=1
 fi
 if [ $integrityResult -ne 0 ]; then
-  docker run -t --rm --user 1000:1000 -e "PYTHONPATH=${CODEBASE_DIR}" -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/bootstrap.py"
+  docker run -t --rm -e "PYTHONPATH=${CODEBASE_DIR}" -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/bootstrap.py"
   echo "# Testing if bootstrapped test resources are valid..."
   docker run -t --rm --user 1000:1000 -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 "${CODEBASE_DIR}/tests/resources/check_integrity.py"
   integrityResult="$?"
