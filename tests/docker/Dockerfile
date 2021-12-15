@@ -22,3 +22,7 @@ RUN python3.8 -m pip install --no-cache-dir --upgrade pip
 # Install python packages
 COPY requirements.txt /tmp/requirements.txt
 RUN python3.8 -m pip install --no-cache-dir -r /tmp/requirements.txt -f https://download.pytorch.org/whl/torch_stable.html
+
+RUN useradd -ms /bin/bash user
+
+USER user
