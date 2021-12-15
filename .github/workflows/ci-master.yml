@@ -11,4 +11,4 @@ jobs:
       - name: Build test docker image and run all tests
         run: |
           chmod +x ./tests/run_tests.sh
-          ./tests/run_tests.sh --build-docker --force-bootstrap
+          ./tests/run_tests.sh --build-docker --force-bootstrap --cpu-test

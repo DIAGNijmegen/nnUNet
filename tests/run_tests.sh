@@ -8,6 +8,7 @@ CODEBASE_DIR=`realpath "${SCRIPT_DIR}/../"`
 DOCKER_DEV_IMAGE="nnunet_dev_image:latest"
 BUILD_DOCKER=0
 FORCE_BOOTSTRAP=0
+CPU_TEST="--runtime=nvidia"
 
 # Process optional arguments
 while [ $# -ne 0 ]
@@ -18,6 +19,9 @@ do
       ;;
     --force-bootstrap)
       FORCE_BOOTSTRAP=1
+      ;;
+    --cpu-test)
+      CPU_TEST=""
       ;;
     *)
       echo "invalid option: $1"
@@ -82,4 +86,4 @@ echo "# All required test resources present..."
 
 # Run all tests
 echo "# Running all tests using docker image: '${DOCKER_DEV_IMAGE}'"
-docker run -t --rm --runtime=nvidia -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 -m pytest "${CODEBASE_DIR}/tests"
+docker run -t --rm ${CPU_TEST} -v "${CODEBASE_DIR}:${CODEBASE_DIR}" -w "${CODEBASE_DIR}" ${DOCKER_DEV_IMAGE} python3.8 -m pytest "${CODEBASE_DIR}/tests"
