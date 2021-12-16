@@ -38,7 +38,12 @@ def check_source_file_ok_or_exit():
 
 
 def is_data_integrity_ok_md5sum(workdir: Path, md5file: Path) -> bool:
-    result = sp.run(["md5sum", "--check", "--quiet", str(md5file)], cwd=str(workdir))
+    result = sp.run(
+        ["md5sum", "--check", "--quiet", str(md5file)],
+        cwd=str(workdir),
+        stderr=sp.DEVNULL,
+        stdout=sp.DEVNULL,
+    )
     return result.returncode == 0
 
 
@@ -50,8 +55,6 @@ def is_data_present_md5(workdir: Path, md5file: Path) -> bool:
         if not (workdir / filepath).is_file():
             print(f"{filepath} does not exist in {workdir}")
             return False
-        else:
-            print(f"{filepath}: OK")
     return True
 
 
