@@ -7,6 +7,8 @@ Please read these documents before opening a new issue!
 
 # nnU-Net
 
+[![CI status: master](https://github.com/DIAGNijmegen/nnUNet/workflows/ci-master/badge.svg?branch=master)](https://github.com/DIAGNijmegen/nnUNet/actions)
+
 In 3D biomedical image segmentation, dataset properties like imaging modality, image sizes, voxel spacings, class 
 ratios etc vary drastically.
 For example, images in the [Liver and Liver Tumor Segmentation Challenge dataset](https://competitions.codalab.org/competitions/17094) 
