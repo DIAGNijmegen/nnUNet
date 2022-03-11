@@ -62,6 +62,10 @@ def main():
                         help="disable mixed precision training and run old school fp32")
     parser.add_argument("--val_folder", required=False, default="validation_raw",
                         help="name of the validation folder. No need to use this for most people")
+    parser.add_argument("--trainer_args", required=False, default="{}", help="Use a dictionary in string format to "
+                                                                             "specify keyword arguments. This will get"
+                                                                             " parsed into a dictionary and passed to "
+                                                                             "the trainer.")
     parser.add_argument("--disable_saving", required=False, action='store_true',
                         help="If set nnU-Net will not save any parameter files (except a temporary checkpoint that "
                              "will be removed at the end of the training). Useful for development when you are "
@@ -151,9 +155,9 @@ def main():
     trainer = trainer_class(plans_file, fold, output_folder=output_folder_name, dataset_directory=dataset_directory,
                             batch_dice=batch_dice, stage=stage, unpack_data=decompress_data,
                             deterministic=deterministic,
-                            fp16=run_mixed_precision)
+                            fp16=run_mixed_precision, **args.trainer_args)
     if args.disable_saving:
-        trainer.save_final_checkpoint = False # whether or not to save the final checkpoint
+        trainer.save_final_checkpoint = False  # whether or not to save the final checkpoint
         trainer.save_best_checkpoint = False  # whether or not to save the best checkpoint according to
         # self.best_val_eval_criterion_MA
         trainer.save_intermediate_checkpoints = True  # whether or not to save checkpoint_latest. We need that in case
