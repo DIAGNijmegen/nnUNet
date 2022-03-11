@@ -477,7 +477,8 @@ class DC_and_CE_loss_weighted(DC_and_CE_loss):
         :param weight_dice:
         """
         super(DC_and_CE_loss_weighted, self).__init__(soft_dice_kwargs, ce_kwargs)
-        self.class_weights = torch.from_numpy(np.array(class_weights))
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.class_weights = self.to_tensor(np.array(class_weights))
         self.dc = SoftDiceLossWeighted(self.class_weights, apply_nonlin=softmax_helper,
                                        soft_dice_kwargs=soft_dice_kwargs)
         self.ce = RobustCrossEntropyLoss(weight=self.class_weights, **ce_kwargs)
@@ -511,3 +512,6 @@ class DC_and_CE_loss_weighted(DC_and_CE_loss):
         else:
             raise NotImplementedError("nah son")  # reserved for other stuff (later)
         return result
+
+    def to_tensor(self, array):
+        return torch.tensor(array, dtype=torch.float32, device=self.device)
