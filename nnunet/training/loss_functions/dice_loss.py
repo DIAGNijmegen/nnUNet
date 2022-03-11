@@ -197,7 +197,7 @@ class SoftDiceLoss(nn.Module):
 class SoftDiceLossWeighted(SoftDiceLoss):
 
     def __init__(self, class_weights, *args, **kwargs):
-        super(SoftDiceLossWeighted, self).__init__(*args, **kwargs)
+        super(SoftDiceLossWeighted, self).__init__(*args, **kwargs['soft_dice_kwargs'])
         assert class_weights is not None, "Should supply class weights for this loss!"
         self.class_weights = class_weights
 

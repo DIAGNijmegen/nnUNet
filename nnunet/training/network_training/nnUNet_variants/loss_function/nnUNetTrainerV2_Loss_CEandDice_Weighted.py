@@ -13,8 +13,7 @@
 #    limitations under the License.
 
 
-from nnunet.training.loss_functions.deep_supervision import MultipleOutputLoss2
-from nnunet.training.loss_functions.dice_loss import DC_and_CE_loss, DC_and_CE_loss_weighted
+from nnunet.training.loss_functions.dice_loss import DC_and_CE_loss_weighted
 from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2
 
 
@@ -26,5 +25,4 @@ class nnUNetTrainerV2_Loss_CEandDice_Weighted(nnUNetTrainerV2):
         self.loss = DC_and_CE_loss_weighted(
             class_weights=kwargs['class_weights'],
             soft_dice_kwargs={'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False},
-            ce_kwargs={}, weight_ce=2, weight_dice=0
         )
