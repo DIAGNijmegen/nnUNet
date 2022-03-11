@@ -14,6 +14,8 @@
 
 
 import torch
+from torchvision.transforms.functional import to_tensor
+
 from nnunet.training.loss_functions.TopK_loss import TopKLoss
 from nnunet.training.loss_functions.crossentropy import RobustCrossEntropyLoss
 from nnunet.utilities.nd_softmax import softmax_helper
@@ -475,7 +477,7 @@ class DC_and_CE_loss_weighted(DC_and_CE_loss):
         :param weight_dice:
         """
         super(DC_and_CE_loss_weighted, self).__init__(soft_dice_kwargs, ce_kwargs)
-        self.class_weights = class_weights
+        self.class_weights = to_tensor(class_weights)
         self.dc = SoftDiceLossWeighted(class_weights, apply_nonlin=softmax_helper, soft_dice_kwargs=soft_dice_kwargs)
         self.ce = RobustCrossEntropyLoss(weight=class_weights, **ce_kwargs)
 
