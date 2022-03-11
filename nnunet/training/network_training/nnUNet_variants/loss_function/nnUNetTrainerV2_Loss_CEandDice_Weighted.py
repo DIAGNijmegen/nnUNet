@@ -25,4 +25,5 @@ class nnUNetTrainerV2_Loss_CEandDice_Weighted(nnUNetTrainerV2):
         self.loss = DC_and_CE_loss_weighted(
             class_weights=kwargs['class_weights'],
             soft_dice_kwargs={'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False},
+            ce_kwargs={}
         )

@@ -477,7 +477,7 @@ class DC_and_CE_loss_weighted(DC_and_CE_loss):
         super(DC_and_CE_loss_weighted, self).__init__(*args, **kwargs)
         self.class_weights = class_weights
         self.dc = SoftDiceLossWeighted(class_weights, apply_nonlin=softmax_helper, *args, **kwargs)
-        self.ce = RobustCrossEntropyLoss(weight=class_weights)
+        self.ce = RobustCrossEntropyLoss(weight=class_weights, *args, **kwargs)
 
     def forward(self, net_output, target):
         """
