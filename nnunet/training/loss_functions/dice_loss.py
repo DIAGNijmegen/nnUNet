@@ -464,7 +464,7 @@ class DC_and_topk_loss(nn.Module):
 
 class DC_and_CE_loss_weighted(DC_and_CE_loss):
 
-    def __init__(self, class_weights, *args, **kwargs):
+    def __init__(self, class_weights, soft_dice_kwargs, ce_kwargs):
         """
         CAREFUL. Weights for CE and Dice do not need to sum to one. You can set whatever you want.
         :param soft_dice_kwargs:
@@ -474,10 +474,10 @@ class DC_and_CE_loss_weighted(DC_and_CE_loss):
         :param weight_ce:
         :param weight_dice:
         """
-        super(DC_and_CE_loss_weighted, self).__init__(*args, **kwargs)
+        super(DC_and_CE_loss_weighted, self).__init__(soft_dice_kwargs, ce_kwargs)
         self.class_weights = class_weights
-        self.dc = SoftDiceLossWeighted(class_weights, apply_nonlin=softmax_helper, *args, **kwargs)
-        self.ce = RobustCrossEntropyLoss(weight=class_weights, *args, **kwargs)
+        self.dc = SoftDiceLossWeighted(class_weights, apply_nonlin=softmax_helper, soft_dice_kwargs=soft_dice_kwargs)
+        self.ce = RobustCrossEntropyLoss(weight=class_weights, **ce_kwargs)
 
     def forward(self, net_output, target):
         """
