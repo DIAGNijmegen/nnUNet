@@ -24,6 +24,7 @@ from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
 from nnunet.training.network_training.nnUNetTrainerCascadeFullRes import nnUNetTrainerCascadeFullRes
 from nnunet.training.network_training.nnUNetTrainerV2_CascadeFullRes import nnUNetTrainerV2CascadeFullRes
 from nnunet.utilities.task_name_id_conversion import convert_id_to_task_name
+from nnunet.utilities.argparse import ParseKwargs
 
 
 def main():
@@ -63,10 +64,9 @@ def main():
                         help="disable mixed precision training and run old school fp32")
     parser.add_argument("--val_folder", required=False, default="validation_raw",
                         help="name of the validation folder. No need to use this for most people")
-    parser.add_argument("--trainer_args", required=False, default="{}", help="Use a dictionary in string format to "
-                                                                             "specify keyword arguments. This will get"
-                                                                             " parsed into a dictionary and passed to "
-                                                                             "the trainer.")
+    parser.add_argument('--trainer_kwargs', nargs='*', required=False, action=ParseKwargs,
+                        help="Use a dictionary in string format to specify keyword arguments. This will get"
+                             " parsed into a dictionary and passed to the trainer.")
     parser.add_argument("--disable_saving", required=False, action='store_true',
                         help="If set nnU-Net will not save any parameter files (except a temporary checkpoint that "
                              "will be removed at the end of the training). Useful for development when you are "
@@ -156,7 +156,7 @@ def main():
     trainer = trainer_class(plans_file, fold, output_folder=output_folder_name, dataset_directory=dataset_directory,
                             batch_dice=batch_dice, stage=stage, unpack_data=decompress_data,
                             deterministic=deterministic,
-                            fp16=run_mixed_precision, **json.loads(args.trainer_args))
+                            fp16=run_mixed_precision, **args.trainer_kwargs)
     if args.disable_saving:
         trainer.save_final_checkpoint = False  # whether or not to save the final checkpoint
         trainer.save_best_checkpoint = False  # whether or not to save the best checkpoint according to

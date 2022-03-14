@@ -13,16 +13,16 @@
 #    limitations under the License.
 
 
-from nnunet.training.loss_functions.dice_loss import DC_and_CE_loss_weighted
+from nnunet.training.loss_functions.dice_loss import DCandCELossWeighted
 from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2
 
 
-class nnUNetTrainerV2_Loss_CEandDice_Weighted(nnUNetTrainerV2):
+class nnUNetTrainer_V2_Loss_CEandDice_Weighted(nnUNetTrainerV2):
     def __init__(self, plans_file, fold, output_folder=None, dataset_directory=None, batch_dice=True, stage=None,
                  unpack_data=True, deterministic=True, fp16=False, **kwargs):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
-        self.loss = DC_and_CE_loss_weighted(
+        self.loss = DCandCELossWeighted(
             class_weights=kwargs['class_weights'],
             soft_dice_kwargs={'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False},
             ce_kwargs={}
