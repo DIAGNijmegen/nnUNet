@@ -220,7 +220,7 @@ class SoftDiceLossWeighted(SoftDiceLoss):
         denominator = 2 * tp + fp + fn + self.smooth
 
         dc = nominator / (denominator + 1e-8)
-        dc *= self.class_weights
+        # dc *= self.class_weights
 
         if not self.do_bg:
             if self.batch_dice:
