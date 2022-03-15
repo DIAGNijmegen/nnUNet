@@ -464,17 +464,17 @@ class DC_and_topk_loss(nn.Module):
         return result
 
 
-class DCandCELossWeighted(DC_and_CE_loss):
+class DCandCEWeightedLoss(DC_and_CE_loss):
 
-    def __init__(self, class_weights: List[float], soft_dice_kwargs, ce_kwargs):
+    def __init__(self, class_weights: List[float], weight_dc, weight_ce, soft_dice_kwargs, ce_kwargs):
         """
         Weighted version of the DC and CE loss combination.
         """
-        super(DCandCELossWeighted, self).__init__(soft_dice_kwargs, ce_kwargs, weight_dice=0)
+        super(DCandCEWeightedLoss, self).__init__(soft_dice_kwargs, ce_kwargs, weight_dice=weight_dc,
+                                                  weight_ce=weight_ce)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.class_weights = self.to_tensor(np.array(class_weights))
-        self.dc = SoftDiceLossWeighted(self.class_weights, apply_nonlin=softmax_helper,
-                                       soft_dice_kwargs=soft_dice_kwargs)
+        self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, **soft_dice_kwargs)
         self.ce = RobustCrossEntropyLoss(weight=self.class_weights, **ce_kwargs)
 
     def to_tensor(self, array):
