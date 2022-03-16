@@ -33,6 +33,5 @@ def copytree(src, dst, ignore=None):
 
         if len(non_permission_errors) > 0:
             raise shutil.Error(non_permission_errors)
-    except FileExistsError:
-        return dst
+        
     return dst
