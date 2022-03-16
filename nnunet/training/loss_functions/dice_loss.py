@@ -14,7 +14,6 @@
 from typing import List
 
 import torch
-from torchvision.transforms.functional import to_tensor
 
 from nnunet.training.loss_functions.TopK_loss import TopKLoss
 from nnunet.training.loss_functions.crossentropy import RobustCrossEntropyLoss
