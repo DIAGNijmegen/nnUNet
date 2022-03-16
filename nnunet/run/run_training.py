@@ -63,7 +63,7 @@ def main():
                         help="disable mixed precision training and run old school fp32")
     parser.add_argument("--val_folder", required=False, default="validation_raw",
                         help="name of the validation folder. No need to use this for most people")
-    parser.add_argument('--trainer_kwargs', required=False,
+    parser.add_argument('--trainer_kwargs', required=False, default="{}",
                         help="Use a dictionary in string format to specify keyword arguments. This will get"
                              " parsed into a dictionary, the values get correctly parsed to the data format"
                              " and passed to the trainer. Example (backslash included): \n"
