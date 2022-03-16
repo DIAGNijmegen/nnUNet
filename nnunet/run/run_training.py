@@ -14,7 +14,6 @@
 
 
 import argparse
-import json
 from batchgenerators.utilities.file_and_folder_operations import *
 from nnunet.run.default_configuration import get_default_configuration
 from nnunet.paths import default_plans_identifier
@@ -24,7 +23,7 @@ from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
 from nnunet.training.network_training.nnUNetTrainerCascadeFullRes import nnUNetTrainerCascadeFullRes
 from nnunet.training.network_training.nnUNetTrainerV2_CascadeFullRes import nnUNetTrainerV2CascadeFullRes
 from nnunet.utilities.task_name_id_conversion import convert_id_to_task_name
-from nnunet.utilities.argparse import ParseKwargs
+from nnunet.utilities.argparse import ParseJson
 
 
 def main():
@@ -64,9 +63,11 @@ def main():
                         help="disable mixed precision training and run old school fp32")
     parser.add_argument("--val_folder", required=False, default="validation_raw",
                         help="name of the validation folder. No need to use this for most people")
-    parser.add_argument('--trainer_kwargs', nargs='*', required=False, action=ParseKwargs,
+    parser.add_argument('--trainer_kwargs', required=False, action=ParseJson,
                         help="Use a dictionary in string format to specify keyword arguments. This will get"
-                             " parsed into a dictionary and passed to the trainer.")
+                             " parsed into a dictionary, the values get correctly parsed to the data format"
+                             " and passed to the trainer. Example (backslash included): \n"
+                             r"--trainer_kwargs {\"class_weights\":[0,2.00990337,1.42540704,2.13387239,0.85529504,0.592059,0.30040984,8.26874351],\"weight_dc\":0.3,\"weight_ce\":0.7}")
     parser.add_argument("--disable_saving", required=False, action='store_true',
                         help="If set nnU-Net will not save any parameter files (except a temporary checkpoint that "
                              "will be removed at the end of the training). Useful for development when you are "

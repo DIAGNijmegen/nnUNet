@@ -1,25 +1,11 @@
 import argparse
-import re
+import json
 
 
-class ParseKwargs(argparse.Action):
-    int_regex = re.compile(r"^[0-9]+$")
-    float_regex = re.compile(r"\d+\.\d+")
-    list_regex = re.compile(r"^\[.+]")
-
+class ParseJson(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, dict())
-        for value in values:
-            key, value = value.split('=')
-            getattr(namespace, self.dest)[key] = self.parse_type(value)
+        setattr(namespace, self.dest, self.parse_dict(values))
 
-    def parse_type(self, value):
-        if re.match(self.list_regex, value):
-            values = list(map(self.parse_type, value.strip("[]").split(",")))
-            return values
-        elif re.match(self.float_regex, value):
-            return float(value)
-        elif re.match(self.int_regex, value):
-            return int(value)
-        else:
-            return value
+    @staticmethod
+    def parse_dict(dict_str):
+        return json.loads(dict_str)
