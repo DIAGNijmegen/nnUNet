@@ -1,13 +1,9 @@
-**[2020_10_21] Update:** We now have documentation for [common questions](documentation/common_questions.md) and
-[common issues](documentation/common_problems_and_solutions.md). We now also provide [reference epoch times for 
-several datasets and tips on how to identify bottlenecks](documentation/expected_epoch_times.md).
+[![CI status: master](https://github.com/DIAGNijmegen/nnUNet/workflows/ci-master/badge.svg?branch=master)](https://github.com/DIAGNijmegen/nnUNet/actions)
 
-Please read these documents before opening a new issue!
+**This is a customized fork of the [nnU-Net repository](https://github.com/MIC-DKFZ/nnUNet)** 
 
 
 # nnU-Net
-
-[![CI status: master](https://github.com/DIAGNijmegen/nnUNet/workflows/ci-master/badge.svg?branch=master)](https://github.com/DIAGNijmegen/nnUNet/actions)
 
 In 3D biomedical image segmentation, dataset properties like imaging modality, image sizes, voxel spacings, class 
 ratios etc vary drastically.
