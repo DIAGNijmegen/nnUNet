@@ -62,9 +62,9 @@ def preprocess_save_to_queue(preprocess_fn, q, list_of_lists, output_files, segs
                 seg_reshaped = resize_segmentation(seg_prev, d.shape[1:], order=1)
                 seg_reshaped = to_one_hot(seg_reshaped, classes)
                 d = np.vstack((d, seg_reshaped)).astype(np.float32)
-            """There is a problem with python process communication that prevents us from communicating obejcts 
+            """There is a problem with python process communication that prevents us from communicating objects 
             larger than 2 GB between processes (basically when the length of the pickle string that will be sent is 
-            communicated by the multiprocessing.Pipe object then the placeholder (\%i I think) does not allow for long 
+            communicated by the multiprocessing.Pipe object then the placeholder (I think) does not allow for long 
             enough strings (lol). This could be fixed by changing i to l (for long) but that would require manually 
             patching system python code. We circumvent that problem here by saving softmax_pred to a npy file that will 
             then be read (and finally deleted) by the Process. save_segmentation_nifti_from_softmax can take either 
@@ -245,9 +245,9 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
         else:
             region_class_order = None
 
-        """There is a problem with python process communication that prevents us from communicating obejcts 
+        """There is a problem with python process communication that prevents us from communicating objects 
         larger than 2 GB between processes (basically when the length of the pickle string that will be sent is 
-        communicated by the multiprocessing.Pipe object then the placeholder (\%i I think) does not allow for long 
+        communicated by the multiprocessing.Pipe object then the placeholder (I think) does not allow for long 
         enough strings (lol). This could be fixed by changing i to l (for long) but that would require manually 
         patching system python code. We circumvent that problem here by saving softmax_pred to a npy file that will 
         then be read (and finally deleted) by the Process. save_segmentation_nifti_from_softmax can take either 
@@ -774,7 +774,7 @@ if __name__ == "__main__":
     parser.add_argument('--disable_mixed_precision', default=False, action='store_true', required=False,
                         help='Predictions are done with mixed precision by default. This improves speed and reduces '
                              'the required vram. If you want to disable mixed precision you can set this flag. Note '
-                             'that yhis is not recommended (mixed precision is ~2x faster!)')
+                             'that this is not recommended (mixed precision is ~2x faster!)')
 
     args = parser.parse_args()
     input_folder = args.input_folder
