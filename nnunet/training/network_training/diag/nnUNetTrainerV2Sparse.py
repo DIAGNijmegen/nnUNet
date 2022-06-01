@@ -11,7 +11,7 @@ from nnunet.training.data_augmentation.diag.data_augmentation_moreDA_sparse impo
 from nnunet.training.dataloading.dataset_loading import unpack_dataset
 from nnunet.training.loss_functions.crossentropy import RobustCrossEntropyLoss
 from nnunet.training.loss_functions.deep_supervision import MultipleOutputLoss2
-from nnunet.training.loss_functions.dice_loss import DC_and_CE_loss, SoftDiceLoss, SoftDiceLossSquared
+from nnunet.training.loss_functions.dice_loss import SoftDiceLoss, SoftDiceLossSquared
 from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2
 from nnunet.utilities.nd_softmax import softmax_helper
 from nnunet.utilities.tensor_utilities import sum_tensor
@@ -182,7 +182,7 @@ class nnUNetTrainerV2Sparse(nnUNetTrainerV2):
                         "INFO: Not unpacking data! Training may be slow due to that. Pray you are not using 2d or you "
                         "will wait all winter for your model to finish!"
                     )
-                print("Add data augmentation with weightmap support...")
+                print("Add data augmentation with support for sparse annotations...")
                 (
                     self.tr_gen,
                     self.val_gen,
