@@ -18,7 +18,6 @@ from batchgenerators.transforms.resample_transforms import (
     SimulateLowResolutionTransform,
 )
 from batchgenerators.transforms.spatial_transforms import (
-    SpatialTransform,
     MirrorTransform,
 )
 from batchgenerators.transforms.utility_transforms import (
@@ -44,6 +43,7 @@ from nnunet.training.data_augmentation.pyramid_augmentations import (
     ApplyRandomBinaryOperatorTransform,
     RemoveRandomConnectedComponentFromOneHotEncodingTransform,
 )
+from nnunet.training.data_augmentation.diag.transforms.spatial_transforms import SpatialTransform
 
 try:
     from batchgenerators.dataloading.nondet_multi_threaded_augmenter import (
