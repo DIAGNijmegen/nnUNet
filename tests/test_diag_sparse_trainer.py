@@ -1,4 +1,6 @@
 from collections import OrderedDict
+
+from batchgenerators.transforms.spatial_transforms import MirrorTransform
 from typing import Dict
 from pathlib import Path
 
@@ -18,6 +20,7 @@ from batchgenerators.transforms.utility_transforms import (
 
 import nnunet
 from nnunet.training.data_augmentation.diag.data_augmentation_moreDA_sparse import get_moreDA_augmentation_sparse
+from nnunet.training.data_augmentation.diag.transforms.spatial_transforms import SparseSpatialTransform
 from nnunet.training.data_augmentation.downsampling import (
     DownsampleSegForDSTransform2,
     downsample_seg_for_ds_transform2,
@@ -26,10 +29,6 @@ from nnunet.training.dataloading.dataset_loading import (
     load_dataset, DataLoader3D,
 )
 from nnunet.training.network_training.diag.nnUNetTrainerV2Sparse import nnUNetTrainerV2Sparse
-from nnunet.training.network_training.diag.transforms.spatial_transforms import (
-    SpatialTransformWithWeights,
-    MirrorTransformWithWeights,
-)
 import nnunet.utilities.task_name_id_conversion as nnp
 import nnunet.run.default_configuration as nndc
 from nnunet.paths import default_plans_identifier
@@ -43,7 +42,12 @@ HIPPOCAMPUS_TASK_ID = 4
 HIPPOCAMPUS_TASK = "Task004_Hippocampus"
 
 
-def test_weighted_data_augmentation():
+def test_sparse_data_augmentation():
+
+    # NOTE: strange that random_crop augmentation is set to False by default,
+    # this seems like a sensible default augmentation to enable.
+    # anyway random_crop is used (within mask) by the sparse trainer anyway by default, so shouldn't be a problem...
+
     data_aug_params = {
         "selected_data_channels": None,
         "selected_seg_channels": [0],
@@ -136,25 +140,21 @@ def test_weighted_data_augmentation():
     data_dict = next(tr_gen)
     initial_data = np.copy(data_dict["data"])
     initial_seg = np.copy(data_dict["seg"])
-    initial_weightmaps = np.copy(data_dict["weightmap"])
 
     def assert_data_properties(
         data_dict: Dict,
         data_key: str = "data",
         seg_key: str = "seg",
-        weightmap_key: str = "weightmap",
         seg_min: float = -1.0,
     ):
         assert data_dict[data_key].min() < -1.0
         assert data_dict[data_key].max() > 6.0
         assert data_dict[seg_key].min() == seg_min
         assert data_dict[seg_key].max() == 2.0
-        assert data_dict[weightmap_key].min() == 0.0
-        assert data_dict[weightmap_key].max() > 5.0
         assert all(
             [
                 data_dict[key].dtype == np.float32
-                for key in [data_key, seg_key, weightmap_key]
+                for key in [data_key, seg_key]
             ]
         )
 
@@ -176,36 +176,31 @@ def test_weighted_data_augmentation():
             else:
                 print_stats(data_dict["target"])
 
-
         data_dict = tf(**data_dict)
+        assert not isinstance(tf, RemoveLabelTransform)
         if idx == 0:
             assert isinstance(tf, SegChannelSelectionTransform)
             assert np.array_equal(initial_data, data_dict["data"])
             assert np.array_equal(initial_seg, data_dict["seg"])
-            assert np.array_equal(initial_weightmaps, data_dict["weightmap"])
             assert_data_properties(data_dict=data_dict)
         elif idx == 1:
-            assert isinstance(tf, SpatialTransformWithWeights)
+            assert isinstance(tf, SparseSpatialTransform)
             assert not np.array_equal(initial_data, data_dict["data"])
             assert not np.array_equal(initial_seg, data_dict["seg"])
-            assert not np.array_equal(initial_weightmaps, data_dict["weightmap"])
             data_ref = np.copy(data_dict["data"])
             seg_ref = np.copy(data_dict["seg"])
-            weightmap_ref = np.copy(data_dict["weightmap"])
             assert_data_properties(data_dict=data_dict)
         elif idx == 8:
             assert isinstance(tf, GammaTransform)
             assert not np.array_equal(data_ref, data_dict["data"])
             assert np.array_equal(seg_ref, data_dict["seg"])
-            assert np.array_equal(weightmap_ref, data_dict["weightmap"])
             data_ref = np.copy(data_dict["data"])
             seg_ref = np.copy(data_dict["seg"])
-            weightmap_ref = np.copy(data_dict["weightmap"])
             assert_data_properties(data_dict=data_dict)
         elif idx == 9:
-            assert isinstance(tf, MirrorTransformWithWeights)
-            matrices = [data_ref, seg_ref, weightmap_ref]
-            keys = ["data", "seg", "weightmap"]
+            assert isinstance(tf, MirrorTransform)
+            matrices = [data_ref, seg_ref]
+            keys = ["data", "seg"]
             batch_size = data_dict["data"].shape[0]
             found_valid_flip = [False for _ in range(batch_size)]
             # per batch element 8 options for flipping based on dimensions...
@@ -226,19 +221,15 @@ def test_weighted_data_augmentation():
             assert all(found_valid_flip)
             assert_data_properties(data_dict=data_dict)
         elif idx == 11:
-            assert isinstance(tf, RemoveLabelTransform)
-            assert_data_properties(data_dict=data_dict, seg_min=0.0)
-        elif idx == 12:
             assert isinstance(tf, RenameTransform)
-            assert all([key in data_dict for key in ["data", "target", "weightmap"]])
+            assert all([key in data_dict for key in ["data", "target"]])
             assert "seg" not in data_dict
-            assert_data_properties(data_dict=data_dict, seg_key="target", seg_min=0.0)
+            assert_data_properties(data_dict=data_dict, seg_key="target")
             seg_ref = np.copy(data_dict["target"])
-            weightmap_ref = np.copy(data_dict["weightmap"])
-        elif idx == 14:
+        elif idx == 12:
             assert isinstance(tf, DownsampleSegForDSTransform2)
             for order, (img, key) in enumerate(
-                zip([seg_ref, weightmap_ref], ["target", "weightmap"])
+                zip([seg_ref], ["target"])
             ):
                 assert isinstance(data_dict[key], list)
                 assert len(data_dict[key]) == 3
@@ -251,20 +242,17 @@ def test_weighted_data_augmentation():
                             seg=img, ds_scales=(scales,), order=order, axes=None,
                         )[0],
                     )
-        elif idx == 15:
+        elif idx == 13:
             assert isinstance(tf, NumpyToTensor)
             assert isinstance(data_dict["data"], torch.Tensor)
             assert data_dict["data"].min() < -1.0
             assert data_dict["data"].max() > 6.0
             for i in range(3):
                 assert isinstance(data_dict["target"][i], torch.Tensor)
-                assert data_dict["target"][i].min() == 0.0
+                assert data_dict["target"][i].min() == -1.0
                 assert data_dict["target"][i].max() == 2.0
-                assert isinstance(data_dict["weightmap"][i], torch.Tensor)
-                assert data_dict["weightmap"][i].min() == 0.0
-                assert data_dict["weightmap"][i].max() > 5.0
-        elif idx > 15:
-            raise RuntimeError("No more than 16 transforms were expected...")
+        elif idx > 14:
+            raise RuntimeError("No more than 15 transforms were expected...")
 
 
 @pytest.mark.parametrize("network", ("3d_fullres",))
@@ -315,5 +303,5 @@ def test_sparse_trainer(tmp_path: Path, network: str, fold: int):
     check_expected_training_output(
         check_dir=tmp_path,
         network=network,
-        trainer_class_name=nnUNetTrainerV2Sparse.__name__,
+        #trainer_class_name=nnUNetTrainerV2Sparse.__name__,
     )

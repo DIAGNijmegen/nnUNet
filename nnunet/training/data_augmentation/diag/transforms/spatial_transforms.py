@@ -20,7 +20,7 @@ from batchgenerators.augmentations.crop_and_pad_augmentations import random_crop
 from batchgenerators.augmentations.crop_and_pad_augmentations import center_crop as center_crop_aug
 
 
-class SpatialTransform(AbstractTransform):
+class SparseSpatialTransform(AbstractTransform):
     """The ultimate spatial transform generator. Rotation, deformation, scaling, cropping: It has all you ever dreamed
     of. Computational time scales only with patch_size, not with input patch size or type of augmentations used.
     Internally, this transform will use a coordinate grid of shape patch_size to which the transformations are
@@ -120,20 +120,23 @@ class SpatialTransform(AbstractTransform):
         else:
             patch_size = self.patch_size
 
-        ret_val = augment_spatial_sparse(data, seg, sample_mask, patch_size=patch_size,
-                                  patch_center_dist_from_border=self.patch_center_dist_from_border,
-                                  do_elastic_deform=self.do_elastic_deform, alpha=self.alpha, sigma=self.sigma,
-                                  do_rotation=self.do_rotation, angle_x=self.angle_x, angle_y=self.angle_y,
-                                  angle_z=self.angle_z, do_scale=self.do_scale, scale=self.scale,
-                                  border_mode_data=self.border_mode_data,
-                                  border_cval_data=self.border_cval_data, order_data=self.order_data,
-                                  border_mode_seg=self.border_mode_seg, border_cval_seg=self.border_cval_seg,
-                                  order_seg=self.order_seg, random_crop=self.random_crop,
-                                  p_el_per_sample=self.p_el_per_sample, p_scale_per_sample=self.p_scale_per_sample,
-                                  p_rot_per_sample=self.p_rot_per_sample,
-                                  independent_scale_for_each_axis=self.independent_scale_for_each_axis,
-                                  p_rot_per_axis=self.p_rot_per_axis,
-                                  p_independent_scale_per_axis=self.p_independent_scale_per_axis)
+        ret_val = augment_spatial_sparse(
+            data, seg, sample_mask, patch_size=patch_size,
+            patch_center_dist_from_border=self.patch_center_dist_from_border,
+            do_elastic_deform=self.do_elastic_deform, alpha=self.alpha, sigma=self.sigma,
+            do_rotation=self.do_rotation, angle_x=self.angle_x, angle_y=self.angle_y,
+            angle_z=self.angle_z, do_scale=self.do_scale, scale=self.scale,
+            border_mode_data=self.border_mode_data,
+            border_cval_data=self.border_cval_data, order_data=self.order_data,
+            border_mode_seg=self.border_mode_seg, border_cval_seg=self.border_cval_seg,
+            order_seg=self.order_seg, random_crop=self.random_crop,
+            p_el_per_sample=self.p_el_per_sample, p_scale_per_sample=self.p_scale_per_sample,
+            p_rot_per_sample=self.p_rot_per_sample,
+            independent_scale_for_each_axis=self.independent_scale_for_each_axis,
+            p_rot_per_axis=self.p_rot_per_axis,
+            p_independent_scale_per_axis=self.p_independent_scale_per_axis,
+            sample_on_sparse_mask_only=True
+        )
         data_dict[self.data_key] = ret_val[0]
         if seg is not None:
             data_dict[self.label_key] = ret_val[1]

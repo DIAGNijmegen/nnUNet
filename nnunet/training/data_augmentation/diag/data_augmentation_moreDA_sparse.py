@@ -1,3 +1,5 @@
+import numpy as np
+
 from batchgenerators.dataloading.multi_threaded_augmenter import MultiThreadedAugmenter
 from batchgenerators.transforms.abstract_transforms import Compose
 from batchgenerators.transforms.channel_selection_transforms import (
@@ -43,7 +45,7 @@ from nnunet.training.data_augmentation.pyramid_augmentations import (
     ApplyRandomBinaryOperatorTransform,
     RemoveRandomConnectedComponentFromOneHotEncodingTransform,
 )
-from nnunet.training.data_augmentation.diag.transforms.spatial_transforms import SpatialTransform
+from nnunet.training.data_augmentation.diag.transforms.spatial_transforms import SparseSpatialTransform
 
 try:
     from batchgenerators.dataloading.nondet_multi_threaded_augmenter import (
@@ -95,11 +97,12 @@ def get_moreDA_augmentation_sparse(
         patch_size_spatial = patch_size
         ignore_axes = None
 
-    # TODO make special SpatialTransform that doesn't sample from -1 (unlabeled) values
+    # use special SparseSpatialTransform that doesn't sample from -1 (unlabeled) values
+    # Note: random_crop is always True, hence patch_center_dist_from_border is required...
     tr_transforms.append(
-        SpatialTransform(
+        SparseSpatialTransform(
             patch_size_spatial,
-            patch_center_dist_from_border=None,
+            patch_center_dist_from_border=np.array(patch_size_spatial) // 2,  # recommended value
             do_elastic_deform=params.get("do_elastic"),
             alpha=params.get("elastic_deform_alpha"),
             sigma=params.get("elastic_deform_sigma"),
@@ -116,7 +119,7 @@ def get_moreDA_augmentation_sparse(
             border_mode_seg="constant",
             border_cval_seg=border_val_seg,
             order_seg=order_seg,
-            random_crop=params.get("random_crop"),
+            random_crop=True,  # params.get("random_crop"),
             p_el_per_sample=params.get("p_eldef"),
             p_scale_per_sample=params.get("p_scale"),
             p_rot_per_sample=params.get("p_rot"),
