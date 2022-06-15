@@ -303,5 +303,5 @@ def test_sparse_trainer(tmp_path: Path, network: str, fold: int):
     check_expected_training_output(
         check_dir=tmp_path,
         network=network,
-        #trainer_class_name=nnUNetTrainerV2Sparse.__name__,
+        trainer_class_name=nnUNetTrainerV2Sparse.__name__,
     )

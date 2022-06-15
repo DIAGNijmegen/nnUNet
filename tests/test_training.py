@@ -19,7 +19,6 @@ from utils import (
     are_pickle_files_roughly_the_same,
 )
 
-
 RESOURCES_DIR = Path(__file__).parent / "resources"
 NNUNET_RAW_DATA_DIR = RESOURCES_DIR / "nnUNet" / "nnUNet_raw_data"
 NNUNET_CROPPED_DATA_DIR = RESOURCES_DIR / "nnUNet" / "nnUNet_cropped_data"
@@ -99,20 +98,25 @@ def test_train_cli(tmp_path: Path, network: str, fold: int):
     check_expected_training_output(check_dir=tmp_path, network=network)
 
 
-def check_expected_training_output(check_dir: Path, network: str, fold: int = 0):
+def check_expected_training_output(
+    check_dir: Path,
+    network: str,
+    fold: int = 0,
+    trainer_class_name: str = TEST_TRAINER_CLASS_NAME
+):
     check_dir_sub = (
         check_dir
         / network
         / "Task004_Hippocampus"
-        / (TEST_TRAINER_CLASS_NAME + "__nnUNetPlansv2.1")
+        / (trainer_class_name + "__nnUNetPlansv2.1")
     )
     # these files should be exactly the same...
     assert is_data_integrity_ok_md5sum(
-        workdir=check_dir, md5file=NNUNET_REF_OUTPUT_DIR / (network + ".md5")
+        workdir=check_dir_sub, md5file=NNUNET_REF_OUTPUT_DIR / (network + ".md5")
     )
     # these files can differ in contents, but should be present...
     assert is_data_present_md5(
-        workdir=check_dir, md5file=NNUNET_REF_OUTPUT_DIR / (network + "_other.md5")
+        workdir=check_dir_sub, md5file=NNUNET_REF_OUTPUT_DIR / (network + "_other.md5")
     )
     # training log will change datetime in filename...
     check_dir_fold = check_dir_sub / f"fold_{fold}"
