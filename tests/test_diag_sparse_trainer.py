@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from batchgenerators.transforms.spatial_transforms import MirrorTransform
-from typing import Dict
+from typing import Dict, Type
 from pathlib import Path
 
 import pytest
@@ -28,7 +28,8 @@ from nnunet.training.data_augmentation.downsampling import (
 from nnunet.training.dataloading.dataset_loading import (
     load_dataset, DataLoader3D,
 )
-from nnunet.training.network_training.diag.nnUNetTrainerV2Sparse import nnUNetTrainerV2Sparse
+from nnunet.training.network_training.diag.nnUNetTrainerV2Sparse import nnUNetTrainerV2Sparse, \
+    nnUNetTrainerV2SparseNormalSampling
 import nnunet.utilities.task_name_id_conversion as nnp
 import nnunet.run.default_configuration as nndc
 from nnunet.paths import default_plans_identifier
@@ -255,9 +256,10 @@ def test_sparse_data_augmentation():
             raise RuntimeError("No more than 15 transforms were expected...")
 
 
+@pytest.mark.parametrize("trainer_class", (nnUNetTrainerV2Sparse, nnUNetTrainerV2SparseNormalSampling))
 @pytest.mark.parametrize("network", ("3d_fullres",))
 @pytest.mark.parametrize("fold", (0,))
-def test_sparse_trainer(tmp_path: Path, network: str, fold: int):
+def test_sparse_trainer(tmp_path: Path, network: str, fold: int, trainer_class: Type[nnUNetTrainerV2Sparse]):
     prepare_paths(output_dir=tmp_path)
     task = nnp.convert_id_to_task_name(HIPPOCAMPUS_TASK_ID)
     decompress_data = True
@@ -273,10 +275,9 @@ def test_sparse_trainer(tmp_path: Path, network: str, fold: int):
     ) = nndc.get_default_configuration(
         network=network,
         task=task,
-        network_trainer=nnUNetTrainerV2Sparse.__name__,
+        network_trainer=trainer_class.__name__,
         plans_identifier=default_plans_identifier,
     )
-    assert issubclass(trainer_class, nnUNetTrainerV2Sparse)
     trainer = trainer_class(
         plans_file=plans_file,
         fold=fold,
@@ -288,10 +289,16 @@ def test_sparse_trainer(tmp_path: Path, network: str, fold: int):
         deterministic=deterministic,
         fp16=run_mixed_precision,
     )
+    normal_sampling_trainer = isinstance(trainer, nnUNetTrainerV2SparseNormalSampling)
+    assert isinstance(trainer, trainer_class)
+    assert trainer.only_sample_from_annotated != normal_sampling_trainer
+
     trainer.max_num_epochs = 2
     trainer.num_batches_per_epoch = 2
     trainer.num_val_batches_per_epoch = 2
     trainer.initialize(True)
+    assert any([isinstance(tf, SparseSpatialTransform) for tf in trainer.tr_gen.transform.transforms]) != normal_sampling_trainer
+
     trainer.run_training()
     trainer.network.eval()
     trainer.validate(
@@ -303,5 +310,5 @@ def test_sparse_trainer(tmp_path: Path, network: str, fold: int):
     check_expected_training_output(
         check_dir=tmp_path,
         network=network,
-        trainer_class_name=nnUNetTrainerV2Sparse.__name__,
+        trainer_class_name=trainer_class.__name__,
     )

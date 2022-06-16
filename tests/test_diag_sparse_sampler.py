@@ -202,34 +202,27 @@ CROP_SCALED_DEFORM_ROTA_OUTPUT_3D = np.array(
 
 
 @pytest.mark.parametrize("use_3d", (False, True))
+@pytest.mark.parametrize("random_crop", (False, True))  # random_crop only matters when use_sparse_mask = False
 @pytest.mark.parametrize(
-    "use_sparse_mask, random_crop, do_scale, do_elastic_deform, do_rotation, expected_output",
+    "use_sparse_mask, do_scale, do_elastic_deform, do_rotation, expected_output",
     (
-        (False, False, False, False, False, None),
-        (False, False, False, False, True, None),
-        (False, False, False, True, False, None),
-        (False, False, False, True, True, None),
-        (False, False, True, False, False, None),
-        (False, False, True, False, True, None),
-        (False, False, True, True, False, None),
-        (False, False, True, True, True, None),
-        (False, True, False, False, False, None),
-        (False, True, False, False, True, None),
-        (False, True, False, True, False, None),
-        (False, True, False, True, True, None),
-        (False, True, True, False, False, None),
-        (False, True, True, False, True, None),
-        (False, True, True, True, False, None),
-        (False, True, True, True, True, None),
+        (False, False, False, False, None),
+        (False, False, False, True, None),
+        (False, False, True, False, None),
+        (False, False, True, True, None),
+        (False, True, False, False, None),
+        (False, True, False, True, None),
+        (False, True, True, False, None),
+        (False, True, True, True, None),
 
-        (True, True, False, False, False, (CROP_OUTPUT, CROP_OUTPUT_3D)),
-        (True, True, False, False, True, (CROP_ROTA_OUTPUT, CROP_ROTA_OUTPUT_3D)),
-        (True, True, False, True, False, (CROP_ELASTIC_OUTPUT, CROP_ELASTIC_OUTPUT_3D)),
-        (True, True, False, True, True, (CROP_ELASTIC_ROTA_OUTPUT, CROP_ELASTIC_ROTA_OUTPUT_3D)),
-        (True, True, True, False, False, (CROP_SCALE_OUTPUT, CROP_SCALE_OUTPUT_3D)),
-        (True, True, True, False, True, (CROP_SCALE_ROTA_OUTPUT, CROP_SCALE_ROTA_OUTPUT_3D)),
-        (True, True, True, True, False, (CROP_SCALE_ELASTIC_OUTPUT, CROP_SCALE_ELASTIC_OUTPUT_3D)),
-        (True, True, True, True, True, (CROP_SCALED_DEFORM_ROTA_OUTPUT, CROP_SCALED_DEFORM_ROTA_OUTPUT_3D)),
+        (True, False, False, False, (CROP_OUTPUT, CROP_OUTPUT_3D)),
+        (True, False, False, True, (CROP_ROTA_OUTPUT, CROP_ROTA_OUTPUT_3D)),
+        (True, False, True, False, (CROP_ELASTIC_OUTPUT, CROP_ELASTIC_OUTPUT_3D)),
+        (True, False, True, True, (CROP_ELASTIC_ROTA_OUTPUT, CROP_ELASTIC_ROTA_OUTPUT_3D)),
+        (True, True, False, False, (CROP_SCALE_OUTPUT, CROP_SCALE_OUTPUT_3D)),
+        (True, True, False, True, (CROP_SCALE_ROTA_OUTPUT, CROP_SCALE_ROTA_OUTPUT_3D)),
+        (True, True, True, False, (CROP_SCALE_ELASTIC_OUTPUT, CROP_SCALE_ELASTIC_OUTPUT_3D)),
+        (True, True, True, True, (CROP_SCALED_DEFORM_ROTA_OUTPUT, CROP_SCALED_DEFORM_ROTA_OUTPUT_3D)),
     ),
 )
 def test_compare_augment_spatial_vs_diag_spatial_sparse(

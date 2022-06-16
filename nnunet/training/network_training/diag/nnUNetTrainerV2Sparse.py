@@ -82,6 +82,11 @@ class DC_and_CE_loss_with_retained_output(torch.nn.Module):
 
 
 class nnUNetTrainerV2Sparse(nnUNetTrainerV2):
+    def __init__(self, *args, **kwargs):
+        super(nnUNetTrainerV2Sparse, self).__init__(*args, **kwargs)
+        self.only_sample_from_annotated = True
+
+
     def run_online_evaluation(self, output, target, ignore_label: int = -1):
         # due to deep supervision the return value and the reference are now lists of tensors. We only need the full
         # resolution output because this is what we are interested in in the end. The others are ignored
@@ -194,6 +199,7 @@ class nnUNetTrainerV2Sparse(nnUNetTrainerV2):
                     deep_supervision_scales=self.deep_supervision_scales,
                     pin_memory=self.pin_memory,
                     use_nondetMultiThreadedAugmenter=False,
+                    only_sample_from_annotated=self.only_sample_from_annotated,
                 )
                 self.print_to_log_file(
                     "TRAINING KEYS:\n %s" % (str(self.dataset_tr.keys())),
@@ -217,3 +223,9 @@ class nnUNetTrainerV2Sparse(nnUNetTrainerV2):
                 "self.was_initialized is True, not running self.initialize again"
             )
         self.was_initialized = True
+
+
+class nnUNetTrainerV2SparseNormalSampling(nnUNetTrainerV2Sparse):
+    def __init__(self, *args, **kwargs):
+        super(nnUNetTrainerV2SparseNormalSampling, self).__init__(*args, **kwargs)
+        self.only_sample_from_annotated = False

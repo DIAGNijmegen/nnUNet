@@ -20,7 +20,7 @@ from batchgenerators.transforms.resample_transforms import (
     SimulateLowResolutionTransform,
 )
 from batchgenerators.transforms.spatial_transforms import (
-    MirrorTransform,
+    MirrorTransform, SpatialTransform,
 )
 from batchgenerators.transforms.utility_transforms import (
     RenameTransform,
@@ -71,6 +71,7 @@ def get_moreDA_augmentation_sparse(
     pin_memory=True,
     regions=None,
     use_nondetMultiThreadedAugmenter: bool = False,
+    only_sample_from_annotated: bool = True,
 ):
     assert (
         params.get("mirror") is None
@@ -98,9 +99,11 @@ def get_moreDA_augmentation_sparse(
         ignore_axes = None
 
     # use special SparseSpatialTransform that doesn't sample from -1 (unlabeled) values
-    # Note: random_crop is always True, hence patch_center_dist_from_border is required...
+    # Note: random_crop is always True if using SparseSpatialTransform,
+    # hence patch_center_dist_from_border is required and set to the recommended value...
+    spatial_tf_class = SparseSpatialTransform if only_sample_from_annotated else SpatialTransform
     tr_transforms.append(
-        SparseSpatialTransform(
+        spatial_tf_class(
             patch_size_spatial,
             patch_center_dist_from_border=np.array(patch_size_spatial) // 2,  # recommended value
             do_elastic_deform=params.get("do_elastic"),
@@ -119,7 +122,7 @@ def get_moreDA_augmentation_sparse(
             border_mode_seg="constant",
             border_cval_seg=border_val_seg,
             order_seg=order_seg,
-            random_crop=True,  # params.get("random_crop"),
+            random_crop=params.get("random_crop"),
             p_el_per_sample=params.get("p_eldef"),
             p_scale_per_sample=params.get("p_scale"),
             p_rot_per_sample=params.get("p_rot"),
