@@ -59,7 +59,7 @@ except ImportError as ie:
     NonDetMultiThreadedAugmenter = None
 
 
-def get_moreDA_augmentation(
+def get_moreDA_augmentation_weightmaps(
     dataloader_train,
     dataloader_val,
     patch_size,
