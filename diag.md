@@ -10,13 +10,15 @@ We use a customized fork of the original nnU-net code which can be found at [DIA
 
 
 ## Custom trainers
-  * nnUNetTrainerV2Sparse
-  * nnUNetTrainerV2SparseNormalSampling
-  * nnUNetTrainerV2Weighted
-  * nnUNetTrainer_V2_Loss_CEandDice_Weighted
 
+The following custom trainers have been added, if you want to use one of these it is recommended you read the relevant documentation below first:
 
-## nnUNetTrainerV2Sparse 
+* nnUNetTrainerV2Sparse
+* nnUNetTrainerV2SparseNormalSampling
+* nnUNetTrainerV2Weighted
+* nnUNetTrainer_V2_Loss_CEandDice_Weighted
+
+### nnUNetTrainerV2Sparse 
 
 This trainer class implements a simple training scheme that works with partially annotated segmentation data. 
 Unlabeled segmentation data should be marked with a value of -1, inside the labels/ ground truth segmentation maps. 
@@ -32,14 +34,14 @@ Some caveats with the sampling around annotated data with the current implementa
 * The random_crop argument doesn't do anything for the sampling, since it is assumed to be random within the annotated data anyway.
 
 
-## nnUNetTrainerV2SparseNormalSampling
+### nnUNetTrainerV2SparseNormalSampling
 
 This trainer is practically the same as the nnUNetTrainerV2Sparse trainer, except that this trainer will use the default sampling without regard for where the annotated voxels are situated.
 
 
-## nnUNetTrainerV2Weighted
+### nnUNetTrainerV2Weighted
 
-** WARNING this trainer is still very experimental, also the training times can increase significantly using this trainer, w.r.t. other trainers! **
+**WARNING this trainer is still very experimental, also the training times can increase significantly using this trainer, w.r.t. other trainers!**
 
 This trainer class implements a simple training scheme with support for training with weightmaps (annotated weight values at the voxel/pixel level).
 
@@ -59,15 +61,18 @@ So that you have the files similar to the following formats there:
 ```
 
 To simplify the weightmap generation processes we have added a utility CLI that can be used to generate weightmaps in a similar fashion to the original [U-Net paper](https://arxiv.org/pdf/1505.04597.pdf):
+`nnUNet_diag_generate_unet_weightmaps /path/to/nnUNet_preprocessed_data/TaskXXX_DIRECTORY/nnUNetData_plans_v2.1_stage0`
+
+For more options use:
 `nnUNet_diag_generate_unet_weightmaps --help`
 
 Some caveats with the weightmap training, which are good to know before usage:
 * You can experience very long training times. The data pipeline is currently not optimized to handle the weightmaps and takes a lot of additional overhead.
 * 2D training is currently not supported. If you need it let me know, it should be easy to add.
-* Dice loss has been disabled by default during training, since it does not support training with weightmaps.
+* Dice loss has been disabled (weight factor is set to 0) by default during training, since this implementation does not support training with weightmaps.
 * The reported Dice values during online evaluation do not take weightmaps into account and should be ignored.
 
 
-## nnUNetTrainer_V2_Loss_CEandDice_Weighted
+### nnUNetTrainer_V2_Loss_CEandDice_Weighted
 
 This trainer implements a custom loss which applies class weights to both the CE and the Dice losses.
