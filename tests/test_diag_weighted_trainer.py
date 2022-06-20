@@ -19,6 +19,8 @@ from batchgenerators.transforms.utility_transforms import (
 )
 
 import nnunet
+from nnunet.training.data_augmentation.diag.data_augmentation_moreDA_weightmaps import \
+    get_moreDA_augmentation_weightmaps
 from nnunet.training.data_augmentation.downsampling import (
     DownsampleSegForDSTransform2,
     downsample_seg_for_ds_transform2,
@@ -204,7 +206,7 @@ def test_weighted_data_augmentation():
     (
         tr_gen,
         val_gen,
-    ) = nnunet.training.network_training.diag.data_augmentation.get_moreDA_augmentation(
+    ) = get_moreDA_augmentation_weightmaps(
         dl_tr,
         dl_val,
         data_aug_params["patch_size_for_spatialtransform"],
