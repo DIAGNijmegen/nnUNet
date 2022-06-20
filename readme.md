@@ -2,6 +2,10 @@
 
 **This is a customized fork of the [nnU-Net repository](https://github.com/MIC-DKFZ/nnUNet)** 
 
+**You can find the list of modifications with documentation [here](https://github.com/DIAGNijmegen/nnUNet/blob/master/nnunet/diag.md). 
+This includes trainers for training on sparse data.**
+
+
 **[2020_10_21] Update:** We now have documentation for [common questions](documentation/common_questions.md) and
 [common issues](documentation/common_problems_and_solutions.md). We now also provide [reference epoch times for
 several datasets and tips on how to identify bottlenecks](documentation/expected_epoch_times.md).
