@@ -44,7 +44,7 @@ import nnunet.run.default_configuration as nndc
 from nnunet.paths import default_plans_identifier
 from nnunet.utilities.diag.generate_unet_weightmaps import (
     generate_unet_weightmaps,
-    auto_detect_classes,
+    get_classes_from_dataset_file,
 )
 
 from tests.test_training import check_expected_training_output, prepare_paths
@@ -64,14 +64,13 @@ def test_bootstrapping_weightmaps(tmp_path):
     )
     output_dir = Path(tmp_path / HIPPOCAMPUS_TASK / "nnUNetData_plans_v2.1_stage0")
     output_dir.mkdir(parents=True)
-    matching_pattern = "*.npz"
-    classes = auto_detect_classes(
-        input_dir=input_dir, matching_pattern=matching_pattern
+    classes = get_classes_from_dataset_file(
+        input_dir=input_dir, background_label=0
     )
     generate_unet_weightmaps(
         input_dir=input_dir,
         output_dir=output_dir,
-        matching_pattern=matching_pattern,
+        matching_pattern="*.npz",
         sigma=5.0,
         w_0=10.0,
         classes=classes,

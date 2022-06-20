@@ -1,4 +1,5 @@
 import argparse
+import json
 from pathlib import Path
 from typing import Tuple
 import numpy as np
@@ -90,13 +91,15 @@ def generate_unet_weightmaps(
         np.save(str(output_file), wmap)
 
 
-def auto_detect_classes(input_dir: Path, matching_pattern: str) -> Tuple[int]:
-    for input_file in input_dir.glob(matching_pattern):
-        seg = load_segmentation_data(input_file=input_file)
-        return tuple([int(v) for v in np.unique(seg) if v >= 1.0])
-    raise FileNotFoundError(
-        f"No files found in input_dir: {input_dir} with pattern: {matching_pattern}"
-    )
+def get_classes_from_dataset_file(input_dir: Path, background_label: int = 0) -> Tuple[int]:
+    dataset_file = input_dir.resolve().absolute().parent / "dataset.json"
+    if not dataset_file.is_file():
+        raise FileNotFoundError(
+            f"No dataset file with labels found at: {dataset_file}"
+        )
+    with open(dataset_file, "r") as f:
+        meta_data = json.load(fp=f)
+    return tuple([int(k) for k, v in meta_data["labels"].items() if int(k) != background_label])
 
 
 def generate_unet_weightmaps_cli():
@@ -147,9 +150,10 @@ def generate_unet_weightmaps_cli():
         print("No output dir was set, using input dir as output dir...")
         args.output_dir = args.input_dir
     if not any(args.classes):
-        print("No classes were specified, attempting to auto detect classes...")
-        args.classes = auto_detect_classes(
-            input_dir=Path(args.input_dir), matching_pattern=args.matching_pattern
+        print("No classes were specified, attempting to get classes from dataset.json... ")
+        print("Background value is assumed to be 0")
+        args.classes = get_classes_from_dataset_file(
+            input_dir=Path(args.input_dir), background_label=0
         )
 
     print(
