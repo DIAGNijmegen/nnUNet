@@ -2,7 +2,7 @@
 
 **This is a customized fork of the [nnU-Net repository](https://github.com/MIC-DKFZ/nnUNet)** 
 
-**You can find the list of modifications with documentation [here](https://github.com/DIAGNijmegen/nnUNet/blob/master/nnunet/diag.md). 
+**You can find the list of modifications with documentation [here](https://github.com/DIAGNijmegen/nnUNet/blob/master/diag.md). 
 This includes trainers for training on sparse data.**
 
 
