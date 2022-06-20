@@ -18,7 +18,7 @@ from nnunet.experiment_planning.nnUNet_convert_decathlon_task import (
 from nnunet.inference.pretrained_models.download_pretrained_model import (
     download_and_install_pretrained_model_by_name,
 )
-from nnunet.utilities.diag.generate_unet_weightmaps import generate_unet_weightmaps, auto_detect_classes
+from nnunet.utilities.diag.generate_unet_weightmaps import generate_unet_weightmaps, get_classes_from_dataset_file
 
 RESOURCES_DIR = Path(__file__).parent
 PREPROCESSED_DATA_DIR = RESOURCES_DIR / "nnUNet" / "nnUNet_preprocessed_data"
@@ -97,13 +97,12 @@ def generate_cropped_and_preprocessed_files():
 def bootstrap_diag_weightmaps():
     print("  # bootstrapping diag weightmaps for preprocessed files")
     input_dir = NNUNET_PREPROCESSING_DATA_DIR / HIPPOCAMPUS_TASK / "nnUNetData_plans_v2.1_stage0"
-    matching_pattern = "*.npz"
     with suppress_stdout():
-        classes = auto_detect_classes(input_dir=input_dir, matching_pattern=matching_pattern)
+        classes = get_classes_from_dataset_file(input_dir=input_dir, background_label=0)
         generate_unet_weightmaps(
             input_dir=input_dir,
             output_dir=input_dir,
-            matching_pattern=matching_pattern,
+            matching_pattern="*.npz",
             sigma=5.0,
             w_0=10.0,
             classes=classes,
