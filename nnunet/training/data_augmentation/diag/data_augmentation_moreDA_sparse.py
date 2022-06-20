@@ -45,7 +45,7 @@ from nnunet.training.data_augmentation.pyramid_augmentations import (
     ApplyRandomBinaryOperatorTransform,
     RemoveRandomConnectedComponentFromOneHotEncodingTransform,
 )
-from nnunet.training.data_augmentation.diag.transforms.spatial_transforms import SparseSpatialTransform
+from nnunet.training.data_augmentation.diag.transforms.spatial_transforms_sparse import SparseSpatialTransform
 
 try:
     from batchgenerators.dataloading.nondet_multi_threaded_augmenter import (

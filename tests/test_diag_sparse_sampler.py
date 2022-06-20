@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 
 import pytest
 
-from nnunet.training.data_augmentation.diag.transforms.spatial_transforms import augment_spatial_sparse
+from nnunet.training.data_augmentation.diag.transforms.spatial_transforms_sparse import augment_spatial_sparse
 from batchgenerators.transforms.spatial_transforms import augment_spatial
 
 import numpy as np

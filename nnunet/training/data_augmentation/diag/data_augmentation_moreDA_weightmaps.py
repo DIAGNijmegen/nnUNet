@@ -25,11 +25,11 @@ from batchgenerators.transforms.utility_transforms import (
 )
 
 # from batchgenerators.transforms.spatial_transforms import SpatialTransform, MirrorTransform --> converted to:
-from nnunet.training.network_training.diag.transforms.spatial_transforms import (
+from nnunet.training.data_augmentation.diag.transforms.spatial_transforms_weightmaps import (
     SpatialTransformWithWeights,
     MirrorTransformWithWeights,
 )
-from nnunet.training.network_training.diag.transforms.custom_transforms import (
+from nnunet.training.data_augmentation.diag.transforms.custom_transforms import (
     Convert2DTo3DTransformWithWeights,
     Convert3DTo2DTransformWithWeights,
 )

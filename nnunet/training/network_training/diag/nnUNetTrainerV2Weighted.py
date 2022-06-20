@@ -14,8 +14,8 @@ from nnunet.training.dataloading.dataset_loading import unpack_dataset
 from nnunet.training.loss_functions.crossentropy import RobustCrossEntropyLoss
 from nnunet.training.loss_functions.dice_loss import SoftDiceLoss, SoftDiceLossSquared
 
-from nnunet.training.network_training.diag.dataset_loading import DataLoader3DWeighted
-import nnunet.training.network_training.diag.data_augmentation
+from nnunet.training.dataloading.diag.dataset_loading_weightmaps import DataLoader3DWeighted
+import nnunet.training.data_augmentation.diag.data_augmentation_moreDA_weightmaps
 from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2
 from nnunet.utilities.nd_softmax import softmax_helper
 from nnunet.utilities.to_torch import maybe_to_torch, to_cuda
@@ -280,7 +280,7 @@ class nnUNetTrainerV2Weighted(nnUNetTrainerV2):
             # now wrap the loss
             print(
                 "Changed loss to MultipleOutputLoss2WithWeightMaps (DC_and_CE_loss_weighted) "
-                "dice weight is set to 0 (not weighted with weight map)"
+                "dice weight is set to 0 (not weighted with the weightmap)"
             )
             dc_ce_loss = DC_and_CE_loss_weighted(
                 {"batch_dice": self.batch_dice, "smooth": 1e-5, "do_bg": False},

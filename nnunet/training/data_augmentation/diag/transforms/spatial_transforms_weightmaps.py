@@ -2,8 +2,8 @@ from batchgenerators.augmentations.utils import create_zero_centered_coordinate_
     rotate_coords_3d, rotate_coords_2d, scale_coords, interpolate_img
 from batchgenerators.transforms.abstract_transforms import AbstractTransform
 
-from nnunet.training.network_training.diag.transforms.crop_and_pad_augmentations import random_crop as random_crop_aug
-from nnunet.training.network_training.diag.transforms.crop_and_pad_augmentations import center_crop as center_crop_aug
+from nnunet.training.data_augmentation.diag.transforms.crop_and_pad_augmentations import random_crop as random_crop_aug
+from nnunet.training.data_augmentation.diag.transforms.crop_and_pad_augmentations import center_crop as center_crop_aug
 
 
 import numpy as np

@@ -30,12 +30,12 @@ from nnunet.training.dataloading.dataset_loading import (
     DataLoader2D,
 )
 from nnunet.training.loss_functions.dice_loss import DC_and_CE_loss
-from nnunet.training.network_training.diag.dataset_loading import DataLoader3DWeighted
+from nnunet.training.dataloading.diag.dataset_loading_weightmaps import DataLoader3DWeighted
 from nnunet.training.network_training.diag.nnUNetTrainerV2Weighted import (
     nnUNetTrainerV2Weighted,
     DC_and_CE_loss_weighted,
 )
-from nnunet.training.network_training.diag.transforms.spatial_transforms import (
+from nnunet.training.data_augmentation.diag.transforms.spatial_transforms_weightmaps import (
     SpatialTransformWithWeights,
     MirrorTransformWithWeights,
 )

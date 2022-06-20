@@ -20,7 +20,7 @@ from batchgenerators.transforms.utility_transforms import (
 
 import nnunet
 from nnunet.training.data_augmentation.diag.data_augmentation_moreDA_sparse import get_moreDA_augmentation_sparse
-from nnunet.training.data_augmentation.diag.transforms.spatial_transforms import SparseSpatialTransform
+from nnunet.training.data_augmentation.diag.transforms.spatial_transforms_sparse import SparseSpatialTransform
 from nnunet.training.data_augmentation.downsampling import (
     DownsampleSegForDSTransform2,
     downsample_seg_for_ds_transform2,
