@@ -311,7 +311,7 @@ class nnUNetTrainerV2Weighted(nnUNetTrainerV2):
                 (
                     self.tr_gen,
                     self.val_gen,
-                ) = nnunet.training.network_training.diag.data_augmentation.get_moreDA_augmentation(
+                ) = nnunet.training.data_augmentation.diag.data_augmentation_moreDA_weightmaps.get_moreDA_augmentation(
                     self.dl_tr,
                     self.dl_val,
                     self.data_aug_params["patch_size_for_spatialtransform"],
