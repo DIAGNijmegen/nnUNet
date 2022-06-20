@@ -125,9 +125,7 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
             y_onehot = gt
         else:
             gt = gt.long()
-            y_onehot = torch.zeros(shp_x)
-            if net_output.device.type == "cuda":
-                y_onehot = y_onehot.cuda(net_output.device.index)
+            y_onehot = torch.zeros(shp_x, device=net_output.device)
             y_onehot.scatter_(1, gt, 1)
 
     tp = net_output * y_onehot
@@ -184,42 +182,6 @@ class SoftDiceLoss(nn.Module):
         denominator = 2 * tp + fp + fn + self.smooth
 
         dc = nominator / (denominator + 1e-8)
-
-        if not self.do_bg:
-            if self.batch_dice:
-                dc = dc[1:]
-            else:
-                dc = dc[:, 1:]
-        dc = dc.mean()
-
-        return -dc
-
-
-class SoftDiceLossWeighted(SoftDiceLoss):
-
-    def __init__(self, class_weights, *args, **kwargs):
-        super(SoftDiceLossWeighted, self).__init__(*args, **kwargs['soft_dice_kwargs'])
-        assert class_weights is not None, "Should supply class weights for this loss!"
-        self.class_weights = class_weights
-
-    def forward(self, x, y, loss_mask=None):
-        shp_x = x.shape
-
-        if self.batch_dice:
-            axes = [0] + list(range(2, len(shp_x)))
-        else:
-            axes = list(range(2, len(shp_x)))
-
-        if self.apply_nonlin is not None:
-            x = self.apply_nonlin(x)
-
-        tp, fp, fn, _ = get_tp_fp_fn_tn(x, y, axes, loss_mask, False)
-
-        nominator = 2 * tp + self.smooth
-        denominator = 2 * tp + fp + fn + self.smooth
-
-        dc = nominator / (denominator + 1e-8)
-        # dc *= self.class_weights
 
         if not self.do_bg:
             if self.batch_dice:
@@ -358,7 +320,7 @@ class DC_and_CE_loss(nn.Module):
         self.weight_dice = weight_dice
         self.weight_ce = weight_ce
         self.aggregate = aggregate
-        self.ce = RobustCrossEntropyLoss(**ce_kwargs)
+        self.ce = RobustCrossEntropyLoss(ignore_index=ignore_label if ignore_label is not None else -100, **ce_kwargs)
 
         self.ignore_label = ignore_label
 
@@ -387,9 +349,9 @@ class DC_and_CE_loss(nn.Module):
             dc_loss = -torch.log(-dc_loss)
 
         ce_loss = self.ce(net_output, target[:, 0].long()) if self.weight_ce != 0 else 0
-        if self.ignore_label is not None:
-            ce_loss *= mask[:, 0]
-            ce_loss = ce_loss.sum() / mask.sum()
+        # if self.ignore_label is not None: This is now done via ignore_index of torch.CrossEntropyLoss
+        #     ce_loss *= mask[:, 0]
+        #     ce_loss = ce_loss.sum() / mask.sum()
 
         if self.aggregate == "sum":
             result = self.weight_ce * ce_loss + self.weight_dice * dc_loss
@@ -465,16 +427,18 @@ class DC_and_topk_loss(nn.Module):
 
 class DCandCEWeightedLoss(DC_and_CE_loss):
 
-    def __init__(self, class_weights: List[float], weight_dc, weight_ce, soft_dice_kwargs, ce_kwargs):
+    def __init__(self, class_weights: List[float], weight_dc, weight_ce, soft_dice_kwargs, ce_kwargs,
+                 ignore_label=None):
         """
         Weighted version of the DC and CE loss combination.
         """
         super(DCandCEWeightedLoss, self).__init__(soft_dice_kwargs, ce_kwargs, weight_dice=weight_dc,
                                                   weight_ce=weight_ce)
+        self.ignore_label = ignore_label
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.class_weights = self.to_tensor(np.array(class_weights))
         self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, **soft_dice_kwargs)
-        self.ce = RobustCrossEntropyLoss(weight=self.class_weights, **ce_kwargs)
+        self.ce = RobustCrossEntropyLoss(weight=self.class_weights, ignore_index=ignore_label, **ce_kwargs)
 
     def to_tensor(self, array):
         return torch.tensor(array, dtype=torch.float32, device=self.device)
