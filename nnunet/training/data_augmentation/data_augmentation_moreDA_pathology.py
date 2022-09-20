@@ -87,6 +87,10 @@ def get_moreDA_augmentation_pathology(dataloader_train, dataloader_val, patch_si
     tr_transforms.append(GaussianNoiseTransform(p_per_sample=0.1))
     tr_transforms.append(GaussianBlurTransform((0.5, 1.), different_sigma_per_channel=True, p_per_sample=0.2,
                                                p_per_channel=0.5))
+
+    tr_transforms.append(HedTransform())
+    tr_transforms.append(HsvTransform())
+
     tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.75, 1.25), p_per_sample=0.15))
 
     if params.get("do_additive_brightness"):
@@ -96,8 +100,8 @@ def get_moreDA_augmentation_pathology(dataloader_train, dataloader_val, patch_si
                                                  p_per_channel=params.get("additive_brightness_p_per_channel")))
 
     tr_transforms.append(ContrastAugmentationTransform(p_per_sample=0.15))
-    tr_transforms.append(HsvTransform())
-    tr_transforms.append(HedTransform())
+
+
 
     tr_transforms.append(SimulateLowResolutionTransform(zoom_range=(0.5, 1), per_channel=True,
                                                         p_per_channel=0.5,

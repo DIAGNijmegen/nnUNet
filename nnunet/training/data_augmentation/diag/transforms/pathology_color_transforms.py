@@ -280,9 +280,10 @@ class HedTransform(AbstractTransform):
         for b in range(data.shape[0]):
             if np.random.uniform() < self.p_per_sample:
                 d = data[b]  # .transpose(1,2,0)
-                d = (d * 255).astype(np.uint8)
+                d = (d * 255).astype(np.uint8) #needed for hed
                 self.hed_transform.randomize()
                 d = self.hed_transform.transform(d)
+                d = (d / 255).astype(np.float32) # back to float
                 data[b] = d
         data_dict[self.data_key] = data
         return data_dict
