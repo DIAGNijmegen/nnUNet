@@ -17,7 +17,7 @@ from nnunet.experiment_planning.experiment_planner_baseline_2DUNet_v21 import Ex
 from nnunet.paths import *
 
 
-class ExperimentPlanner2D_v21_RGB_scaleTo_0_1(ExperimentPlanner2D_v21):
+class ExperimentPlanner2D_v21_RGB_scaleTo_0_1_bs8_ps512(ExperimentPlanner2D_v21):
     """
     used by tutorial nnunet.tutorials.custom_preprocessing
     """
