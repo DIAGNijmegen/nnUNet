@@ -23,7 +23,7 @@ class ExperimentPlanner2D_v21_RGB_scaleTo_0_1_bs8_ps512(ExperimentPlanner2D_v21)
     """
     def __init__(self, folder_with_cropped_data, preprocessed_output_folder):
         super().__init__(folder_with_cropped_data, preprocessed_output_folder)
-        self.data_identifier = "nnUNet_RGB_scaleTo_0_1"
+        self.data_identifier = "nnUNet_RGB_scaleTo_0_1_bs8_ps512"
         self.plans_fname = join(self.preprocessed_output_folder, "nnUNet_RGB_scaleTo_0_1" + "_plans_2D.pkl")
 
         # The custom preprocessor class we intend to use is GenericPreprocessor_scale_uint8_to_0_1. It must be located
