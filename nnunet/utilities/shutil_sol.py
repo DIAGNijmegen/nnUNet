@@ -23,7 +23,8 @@ def copytree(src, dst, ignore=None):
                         ignore=ignore,
                         symlinks=False,
                         ignore_dangling_symlinks=True,
-                        copy_function=copyfile)
+                        copy_function=copyfile,
+                        dirs_exist_ok=False)
     except shutil.Error as e:
         non_permission_errors = []
         for error in e.args[0]:
