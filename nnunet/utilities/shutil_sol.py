@@ -16,7 +16,7 @@ def copyfile(src, dst, **kwargs):
     return shutil.copyfile(src, dst, **kwargs)
 
 
-def copytree(src, dst, ignore=None):
+def copytree(src, dst, ignore=None, dirs_exist_ok=False):
     """Similar to shutil.copytree but makes sure that copyfile is used for copying"""
     try:
         shutil.copytree(src, dst,
@@ -24,7 +24,7 @@ def copytree(src, dst, ignore=None):
                         symlinks=False,
                         ignore_dangling_symlinks=True,
                         copy_function=copyfile,
-                        dirs_exist_ok=False)
+                        dirs_exist_ok=dirs_exist_ok)
     except shutil.Error as e:
         non_permission_errors = []
         for error in e.args[0]:
