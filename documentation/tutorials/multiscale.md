@@ -5,7 +5,7 @@ to utilize this. In this documentation the extra steps required to run nnU-Net w
 The figure below is a schematic overview of the adjusted architecture (number of down- and up samplings are
 illustrative)
 
-![]([../images/nnU-Net architecture.png](https://github.com/DIAGNijmegen/nnUNet/blob/d55f059faaf558618e410af142ac09b7b42b13e8/documentation/images/nnU-Net%20architecture.png))
+![overview](https://github.com/DIAGNijmegen/nnUNet/blob/d55f059faaf558618e410af142ac09b7b42b13e8/documentation/images/nnU-Net%20architecture.png)
 
 ## Preparing the data
 
