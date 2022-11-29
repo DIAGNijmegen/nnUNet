@@ -58,7 +58,7 @@ def main():
                                                                                           "you should enable this")
     parser.add_argument("--find_lr", required=False, default=False, action="store_true",
                         help="not used here, just for fun")
-    parser.add_argument("--valbest", required=False, default=False, action="store_true",
+    parser.add_argument("--val_best", required=False, default=False, action="store_true",
                         help="hands off. This is not intended to be used")
     parser.add_argument("--fp32", required=False, default=False, action="store_true",
                         help="disable mixed precision training and run old school fp32")
@@ -68,7 +68,8 @@ def main():
                         help="Use a dictionary in string format to specify keyword arguments. This will get"
                              " parsed into a dictionary, the values get correctly parsed to the data format"
                              " and passed to the trainer. Example (backslash included): \n"
-                             r"--trainer_kwargs {\"class_weights\":[0,2.00990337,1.42540704,2.13387239,0.85529504,0.592059,0.30040984,8.26874351],\"weight_dc\":0.3,\"weight_ce\":0.7}")
+                             r"--trainer_kwargs {\"class_weights\":[0,2.,1.4,2.1,0.8,0.6,0.3,8.2],"
+                             r"\"weight_dc\":0.3,\"weight_ce\":0.7}")
     parser.add_argument("--disable_saving", required=False, action='store_true',
                         help="If set nnU-Net will not save any parameter files (except a temporary checkpoint that "
                              "will be removed at the end of the training). Useful for development when you are "
@@ -81,21 +82,15 @@ def main():
                              "running postprocessing on each fold is computationally cheap, but some users have "
                              "reported issues with very large images. If your images are large (>600x600x600 voxels) "
                              "you should consider setting this flag.")
-    # parser.add_argument("--interp_order", required=False, default=3, type=int,
-    #                     help="order of interpolation for segmentations. Testing purpose only. Hands off")
-    # parser.add_argument("--interp_order_z", required=False, default=0, type=int,
-    #                     help="order of interpolation along z if z is resampled separately. Testing purpose only. "
-    #                          "Hands off")
-    # parser.add_argument("--force_separate_z", required=False, default="None", type=str,
-    #                     help="force_separate_z resampling. Can be None, True or False. Testing purpose only. Hands off")
+    parser.add_argument("--disable_tta", required=False, action='store_true', default=False)
     parser.add_argument('--val_disable_overwrite', action='store_false', default=True,
                         help='Validation does not overwrite existing segmentations')
     parser.add_argument('--disable_next_stage_pred', action='store_true', default=False,
                         help='do not predict next stage')
     parser.add_argument('-pretrained_weights', type=str, required=False, default=None,
                         help='path to nnU-Net checkpoint file to be used as pretrained model (use .model '
-                             'file, for example model_final_checkpoint.model). Will only be used when actually training. '
-                             'Optional. Beta. Use with caution.')
+                             'file, for example model_final_checkpoint.model). Will only be used when actually '
+                             'training. Optional. Beta. Use with caution.')
 
     args = parser.parse_args()
 
@@ -112,15 +107,12 @@ def main():
     decompress_data = not use_compressed_data
 
     deterministic = args.deterministic
-    valbest = args.valbest
+    val_best = args.val_best
 
     fp32 = args.fp32
     run_mixed_precision = not fp32
 
     val_folder = args.val_folder
-    # interp_order = args.interp_order
-    # interp_order_z = args.interp_order_z
-    # force_separate_z = args.force_separate_z
 
     if not task.startswith("Task"):
         task_id = int(task)
@@ -130,16 +122,6 @@ def main():
         pass
     else:
         fold = int(fold)
-
-    # if force_separate_z == "None":
-    #     force_separate_z = None
-    # elif force_separate_z == "False":
-    #     force_separate_z = False
-    # elif force_separate_z == "True":
-    #     force_separate_z = True
-    # else:
-    #     raise ValueError("force_separate_z must be None, True or False. Given: %s" % force_separate_z)
-
     plans_file, output_folder_name, dataset_directory, batch_dice, stage, \
     trainer_class = get_default_configuration(network, task, network_trainer, plans_identifier)
 
@@ -161,9 +143,7 @@ def main():
     if args.disable_saving:
         trainer.save_final_checkpoint = False  # whether or not to save the final checkpoint
         trainer.save_best_checkpoint = False  # whether or not to save the best checkpoint according to
-        # self.best_val_eval_criterion_MA
         trainer.save_intermediate_checkpoints = True  # whether or not to save checkpoint_latest. We need that in case
-        # the training chashes
         trainer.save_latest_only = True  # if false it will not store/overwrite _latest but separate files each
 
     trainer.initialize(not validation_only)
@@ -179,22 +159,23 @@ def main():
                 # we start a new training. If pretrained_weights are set, use them
                 load_pretrained_weights(trainer.network, args.pretrained_weights)
             else:
-                # new training without pretraine weights, do nothing
+                # new training without pretrained weights, do nothing
                 pass
 
             trainer.run_training()
         else:
-            if valbest:
+            if val_best:
                 trainer.load_best_checkpoint(train=False)
             else:
                 trainer.load_final_checkpoint(train=False)
-
+                
+        trainer.load_best_checkpoint(train=False)  # Why not load the best model?
         trainer.network.eval()
 
         # predict validation
         trainer.validate(save_softmax=args.npz, validation_folder_name=val_folder,
                          run_postprocessing_on_folds=not disable_postprocessing_on_folds,
-                         overwrite=args.val_disable_overwrite)
+                         overwrite=args.val_disable_overwrite, do_mirroring=not args.disable_tta)
 
         if network == '3d_lowres' and not args.disable_next_stage_pred:
             print("predicting segmentations for the next stage of the cascade")

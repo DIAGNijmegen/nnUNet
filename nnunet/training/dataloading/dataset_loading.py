@@ -555,10 +555,9 @@ class DataLoader2D(SlimDataLoaderBase):
                 # Make sure it is within the bounds of lb and ub
                 bbox_x_lb = max(lb_x, selected_voxel[0] - self.patch_size[0] // 2)
                 bbox_y_lb = max(lb_y, selected_voxel[1] - self.patch_size[1] // 2)
-
             bbox_x_ub = bbox_x_lb + self.patch_size[0]
-            bbox_y_ub = bbox_y_lb + self.patch_size[1]
-
+            bbox_y_ub = bbox_y_lb + self.patch_size[1]]
+            
             # whoever wrote this knew what he was doing (hint: it was me). We first crop the data to the region of the
             # bbox that actually lies within the data. This will result in a smaller array which is then faster to pad.
             # valid_bbox is just the coord that lied within the data cube. It will be padded to match the patch size
@@ -572,9 +571,8 @@ class DataLoader2D(SlimDataLoaderBase):
             # Why not just concatenate them here and forget about the if statements? Well that's because segneeds to
             # be padded with -1 constant whereas seg_from_previous_stage needs to be padded with 0s (we could also
             # remove label -1 in the data augmentation but this way it is less error prone)
-
-            case_all_data = case_all_data[:, valid_bbox_x_lb:valid_bbox_x_ub,
-                            valid_bbox_y_lb:valid_bbox_y_ub]
+            
+            case_all_data = case_all_data[:, valid_bbox_x_lb:valid_bbox_x_ub, valid_bbox_y_lb:valid_bbox_y_ub]
 
             case_all_data_donly = np.pad(case_all_data[:-1], ((0, 0),
                                                               (-min(0, bbox_x_lb), max(bbox_x_ub - shape[0], 0)),

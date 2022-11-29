@@ -17,13 +17,15 @@ import sys
 from copy import deepcopy
 from typing import Union, Tuple
 
-import numpy as np
 import SimpleITK as sitk
+import matplotlib.pyplot as plt
+import numpy as np
 from batchgenerators.augmentations.utils import resize_segmentation
-from nnunet.preprocessing.preprocessing import get_lowres_axis, get_do_separate_z, resample_data_or_seg
-from nnunet.preprocessing.alt import resample_data_or_seg as alt_resample_data_or_seg
-from nnunet.utilities.switches import use_alt_resampling
 from batchgenerators.utilities.file_and_folder_operations import *
+
+from nnunet.preprocessing.alt import resample_data_or_seg as alt_resample_data_or_seg
+from nnunet.preprocessing.preprocessing import get_lowres_axis, get_do_separate_z, resample_data_or_seg
+from nnunet.utilities.switches import use_alt_resampling
 
 
 def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.ndarray], out_fname: str,
@@ -160,9 +162,12 @@ def save_segmentation_nifti_from_softmax(segmentation_softmax: Union[str, np.nda
         seg_resized_itk.SetOrigin(properties_dict['itk_origin'])
         seg_resized_itk.SetDirection(properties_dict['itk_direction'])
         sitk.WriteImage(seg_resized_itk, non_postprocessed_fname)
+        return seg_old_size_postprocessed.astype(np.uint8), seg_old_size.astype(np.uint8)
+    return seg_old_size_postprocessed.astype(np.uint8), None
 
 
-def save_segmentation_nifti(segmentation, out_fname, dct, order=1, force_separate_z=None, order_z=0, verbose: bool = False):
+def save_segmentation_nifti(segmentation, out_fname, dct, order=1, force_separate_z=None, order_z=0,
+                            verbose: bool = False):
     """
     faster and uses less ram than save_segmentation_nifti_from_softmax, but maybe less precise and also does not support
     softmax export (which is needed for ensembling). So it's a niche function that may be useful in some cases.
@@ -240,3 +245,20 @@ def save_segmentation_nifti(segmentation, out_fname, dct, order=1, force_separat
 
     if not verbose:
         sys.stdout = sys.__stdout__
+        
+def save_segmentation_plot(seg, gt, patch, context_patch=None, file_path=None,
+                           color_values=['yellow', 'firebrick', 'pink', 'purple', "red", "green", "blue", "blue"]):
+    from matplotlib.colors import ListedColormap, BoundaryNorm
+
+    cmap = ListedColormap(color_values)
+    bounds = list(range(len(color_values)))
+    norm = BoundaryNorm(bounds, cmap.N, clip=True)
+
+    fig, axs = plt.subplots(1, 4 if context_patch is not None else 3, figsize=(15, 5))
+    axs[0].imshow(patch)
+    axs[1].imshow(gt, cmap=cmap, norm=norm, interpolation='nearest')
+    axs[2].imshow(seg, cmap=cmap, norm=norm, interpolation='nearest')
+    if context_patch is not None:
+        axs[3].imshow(context_patch)
+    plt.savefig(file_path)
+    plt.close()

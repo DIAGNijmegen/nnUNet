@@ -147,11 +147,14 @@ def resample_data_or_seg(data, new_shape, is_seg, axis=None, order=3, do_separat
                 reshaped_data = []
                 for slice_id in range(shape[axis]):
                     if axis == 0:
-                        reshaped_data.append(resize_fn(data[c, slice_id], new_shape_2d, order, **kwargs).astype(dtype_data))
+                        reshaped_data.append(
+                            resize_fn(data[c, slice_id], new_shape_2d, order, **kwargs).astype(dtype_data))
                     elif axis == 1:
-                        reshaped_data.append(resize_fn(data[c, :, slice_id], new_shape_2d, order, **kwargs).astype(dtype_data))
+                        reshaped_data.append(
+                            resize_fn(data[c, :, slice_id], new_shape_2d, order, **kwargs).astype(dtype_data))
                     else:
-                        reshaped_data.append(resize_fn(data[c, :, :, slice_id], new_shape_2d, order, **kwargs).astype(dtype_data))
+                        reshaped_data.append(
+                            resize_fn(data[c, :, :, slice_id], new_shape_2d, order, **kwargs).astype(dtype_data))
                 reshaped_data = np.stack(reshaped_data, axis)
                 if shape[axis] != new_shape[axis]:
 
@@ -198,7 +201,8 @@ def resample_data_or_seg(data, new_shape, is_seg, axis=None, order=3, do_separat
 
 
 class GenericPreprocessor(object):
-    def __init__(self, normalization_scheme_per_modality, use_nonzero_mask, transpose_forward: (tuple, list), intensityproperties=None):
+    def __init__(self, normalization_scheme_per_modality, use_nonzero_mask, transpose_forward: (tuple, list),
+                 intensityproperties=None):
         """
 
         :param normalization_scheme_per_modality: dict {0:'nonCT'}
@@ -336,7 +340,7 @@ class GenericPreprocessor(object):
         # let's do 10.000 samples per class
         # seed this for reproducibility!
         num_samples = 10000
-        min_percent_coverage = 0.01 # at least 1% of the class voxels need to be selected, otherwise it may be too sparse
+        min_percent_coverage = 0.01  # at least 1% of the class voxels need to be selected, otherwise it may be too sparse
         rndst = np.random.RandomState(1234)
         class_locs = {}
         for c in all_classes:
@@ -588,7 +592,8 @@ class Preprocessor3DBetterResampling(GenericPreprocessor):
 
 
 class PreprocessorFor2D(GenericPreprocessor):
-    def __init__(self, normalization_scheme_per_modality, use_nonzero_mask, transpose_forward: (tuple, list), intensityproperties=None):
+    def __init__(self, normalization_scheme_per_modality, use_nonzero_mask, transpose_forward: (tuple, list),
+                 intensityproperties=None):
         super(PreprocessorFor2D, self).__init__(normalization_scheme_per_modality, use_nonzero_mask,
                                                 transpose_forward, intensityproperties)
 
@@ -677,6 +682,8 @@ class PreprocessorFor2D(GenericPreprocessor):
                 data[c] = (data[c] - mn) / sd
                 if use_nonzero_mask[c]:
                     data[c][seg[-1] < 0] = 0
+            elif scheme == 'zeroToOne':
+                data[c] = data[c].astype(np.float32) / 255.
             elif scheme == 'noNorm':
                 pass
             else:
@@ -769,6 +776,7 @@ class PreprocessorFor2D_edgeLength512(PreprocessorFor2D):
         return data, seg, properties
 
 
+
 class PreprocessorFor2D_edgeLength768(PreprocessorFor2D_edgeLength512):
     target_edge_size = 768
 
@@ -777,6 +785,7 @@ class PreprocessorFor3D_LeaveOriginalZSpacing(GenericPreprocessor):
     """
     3d_lowres and 3d_fullres are not resampled along z!
     """
+
     def resample_and_normalize(self, data, target_spacing, properties, seg=None, force_separate_z=None):
         """
         if target_spacing[0] is None or nan we use original_spacing_transposed[0] (no resampling along z)
@@ -799,7 +808,7 @@ class PreprocessorFor3D_LeaveOriginalZSpacing(GenericPreprocessor):
         target_spacing = deepcopy(target_spacing)
         if target_spacing[0] is None or np.isnan(target_spacing[0]):
             target_spacing[0] = original_spacing_transposed[0]
-        #print(target_spacing, original_spacing_transposed)
+        # print(target_spacing, original_spacing_transposed)
         data, seg = resample_patient(data, seg, np.array(original_spacing_transposed), target_spacing, 3, 1,
                                      force_separate_z=force_separate_z, order_z_data=0, order_z_seg=0,
                                      separate_z_anisotropy_threshold=self.resample_separate_z_anisotropy_threshold)
@@ -888,7 +897,7 @@ class PreprocessorFor3D_NoResampling(GenericPreprocessor):
         # remove nans
         data[np.isnan(data)] = 0
         target_spacing = deepcopy(original_spacing_transposed)
-        #print(target_spacing, original_spacing_transposed)
+        # print(target_spacing, original_spacing_transposed)
         data, seg = resample_patient(data, seg, np.array(original_spacing_transposed), target_spacing, 3, 1,
                                      force_separate_z=force_separate_z, order_z_data=0, order_z_seg=0,
                                      separate_z_anisotropy_threshold=self.resample_separate_z_anisotropy_threshold)
@@ -947,4 +956,3 @@ class PreprocessorFor3D_NoResampling(GenericPreprocessor):
                 data[c][mask] = (data[c][mask] - data[c][mask].mean()) / (data[c][mask].std() + 1e-8)
                 data[c][mask == 0] = 0
         return data, seg, properties
-

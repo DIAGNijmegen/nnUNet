@@ -15,20 +15,21 @@
 
 import argparse
 from copy import deepcopy
-from typing import Tuple, Union, List
-
-import numpy as np
-from batchgenerators.augmentations.utils import resize_segmentation
-from nnunet.inference.segmentation_export import save_segmentation_nifti_from_softmax, save_segmentation_nifti
-from batchgenerators.utilities.file_and_folder_operations import *
-from multiprocessing import Process, Queue
-import torch
-import SimpleITK as sitk
-import shutil
-import nnunet.utilities.shutil_sol as shutil_sol
 from multiprocessing import Pool
+from multiprocessing import Process, Queue
+from pathlib import Path
+from typing import Tuple, Union
+
+import SimpleITK as sitk
+import numpy as np
+import torch
+from batchgenerators.augmentations.utils import resize_segmentation
+from batchgenerators.utilities.file_and_folder_operations import *
+import nnunet.utilities.shutil_sol as shutil_sol
+from nnunet.inference.segmentation_export import save_segmentation_nifti_from_softmax, save_segmentation_nifti
 from nnunet.postprocessing.connected_components import load_remove_save, load_postprocessing
 from nnunet.training.model_restore import load_model_and_checkpoint_files
+from nnunet.training.network_training.diag.nnUNetTrainerV2MultiScale import nnUNetTrainerV2MultiScale
 from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
 from nnunet.utilities.one_hot_encoding import to_one_hot
 from nnunet.utilities.switches import use_alt_resampling
@@ -134,7 +135,7 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
                   num_threads_nifti_save, segs_from_prev_stage=None, do_tta=True, mixed_precision=True,
                   overwrite_existing=False,
                   all_in_gpu=False, step_size=0.5, checkpoint_name="model_final_checkpoint",
-                  segmentation_export_kwargs: dict = None, disable_postprocessing: bool = False):
+                  segmentation_export_kwargs: dict = None, disable_postprocessing: bool = False, trainer_kwargs=None):
     """
     :param segmentation_export_kwargs:
     :param model: folder where the model is saved, must contain fold_x subfolders
@@ -170,7 +171,8 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
     if not overwrite_existing:
         print("number of cases:", len(list_of_lists))
         # if save_npz=True then we should also check for missing npz files
-        not_done_idx = [i for i, j in enumerate(cleaned_output_files) if (not isfile(j)) or (save_npz and not isfile(j[:-7] + '.npz'))]
+        not_done_idx = [i for i, j in enumerate(cleaned_output_files) if
+                        (not isfile(j)) or (save_npz and not isfile(j[:-7] + '.npz'))]
 
         cleaned_output_files = [cleaned_output_files[i] for i in not_done_idx]
         list_of_lists = [list_of_lists[i] for i in not_done_idx]
@@ -184,7 +186,7 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
 
     print("loading parameters for folds,", folds)
     trainer, params = load_model_and_checkpoint_files(model, folds, mixed_precision=mixed_precision,
-                                                      checkpoint_name=checkpoint_name)
+                                                      checkpoint_name=checkpoint_name, trainer_kwargs=trainer_kwargs)
 
     if segmentation_export_kwargs is None:
         if 'segmentation_export_params' in trainer.plans.keys():
@@ -207,11 +209,18 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
     all_output_files = []
     for preprocessed in preprocessing:
         output_filename, (d, dct) = preprocessed
+
+        print(output_filename, dct)
         all_output_files.append(all_output_files)
         if isinstance(d, str):
             data = np.load(d)
             os.remove(d)
             d = data
+
+        if isinstance(trainer, nnUNetTrainerV2MultiScale):
+            roi_name = Path(output_filename).stem.strip(".nii")
+            context = trainer.dl_tr.sample_context(dict(), key=roi_name, shape=d.shape[-2:])
+            d = np.stack([d[:, 0], context])
 
         print("predicting", output_filename)
         trainer.load_checkpoint_ram(params[0], False)
@@ -263,7 +272,6 @@ def predict_cases(model, list_of_lists, output_filenames, folds, save_npz, num_t
             bytes_per_voxel = 4
             if all_in_gpu:
                 bytes_per_voxel = 2  # if all_in_gpu then the return value is half (float16)
-            
             if np.prod(softmax.shape) > (2e9 / bytes_per_voxel * 0.85):  # * 0.85 just to be save
                 print(
                     "This output is too large for python process-process communication. Saving output temporarily to disk")
@@ -381,7 +389,8 @@ def predict_cases_fast(model, list_of_lists, output_filenames, folds, num_thread
             trainer.load_checkpoint_ram(p, False)
 
             res = trainer.predict_preprocessed_data_return_seg_and_softmax(d, do_mirroring=do_tta,
-                                                                           mirror_axes=trainer.data_aug_params['mirror_axes'],
+                                                                           mirror_axes=trainer.data_aug_params[
+                                                                               'mirror_axes'],
                                                                            use_sliding_window=True,
                                                                            step_size=step_size, use_gaussian=True,
                                                                            all_in_gpu=all_in_gpu,
@@ -513,7 +522,8 @@ def predict_cases_fastest(model, list_of_lists, output_filenames, folds, num_thr
         for i, p in enumerate(params):
             trainer.load_checkpoint_ram(p, False)
             res = trainer.predict_preprocessed_data_return_seg_and_softmax(d, do_mirroring=do_tta,
-                                                                           mirror_axes=trainer.data_aug_params['mirror_axes'],
+                                                                           mirror_axes=trainer.data_aug_params[
+                                                                               'mirror_axes'],
                                                                            use_sliding_window=True,
                                                                            step_size=step_size, use_gaussian=True,
                                                                            all_in_gpu=all_in_gpu,
@@ -618,7 +628,8 @@ def predict_from_folder(model: str, input_folder: str, output_folder: str, folds
                         part_id: int, num_parts: int, tta: bool, mixed_precision: bool = True,
                         overwrite_existing: bool = True, mode: str = 'normal', overwrite_all_in_gpu: bool = None,
                         step_size: float = 0.5, checkpoint_name: str = "model_final_checkpoint",
-                        segmentation_export_kwargs: dict = None, disable_postprocessing: bool = False):
+                        segmentation_export_kwargs: dict = None, disable_postprocessing: bool = False,
+                        trainer_kwargs=None):
     """
         here we use the standard naming scheme to generate list_of_lists and output_files needed by predict_cases
 
@@ -672,7 +683,8 @@ def predict_from_folder(model: str, input_folder: str, output_folder: str, folds
                              all_in_gpu=all_in_gpu,
                              step_size=step_size, checkpoint_name=checkpoint_name,
                              segmentation_export_kwargs=segmentation_export_kwargs,
-                             disable_postprocessing=disable_postprocessing)
+                             disable_postprocessing=disable_postprocessing,
+                             trainer_kwargs=trainer_kwargs)
     elif mode == "fast":
         if overwrite_all_in_gpu is None:
             all_in_gpu = False

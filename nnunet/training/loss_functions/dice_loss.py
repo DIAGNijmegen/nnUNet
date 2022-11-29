@@ -17,10 +17,13 @@ import torch
 
 from nnunet.training.loss_functions.TopK_loss import TopKLoss
 from nnunet.training.loss_functions.crossentropy import RobustCrossEntropyLoss
+from nnunet.training.loss_functions.focal_loss import FocalLoss
 from nnunet.utilities.nd_softmax import softmax_helper
 from nnunet.utilities.tensor_utilities import sum_tensor
 from torch import nn
 import numpy as np
+
+from nnunet.utilities.to_torch import maybe_to_torch, to_cuda
 
 
 class GDL(nn.Module):
@@ -155,7 +158,7 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
 
 
 class SoftDiceLoss(nn.Module):
-    def __init__(self, apply_nonlin=None, batch_dice=False, do_bg=True, smooth=1.):
+    def __init__(self, apply_nonlin=None, batch_dice=False, do_bg=True, smooth=1., reduction="mean"):
         """
         """
         super(SoftDiceLoss, self).__init__()
@@ -164,6 +167,7 @@ class SoftDiceLoss(nn.Module):
         self.batch_dice = batch_dice
         self.apply_nonlin = apply_nonlin
         self.smooth = smooth
+        self.reduction = reduction
 
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
@@ -188,7 +192,10 @@ class SoftDiceLoss(nn.Module):
                 dc = dc[1:]
             else:
                 dc = dc[:, 1:]
-        dc = dc.mean()
+        if self.reduction == "mean":
+            dc = dc.mean()
+        elif self.reduction == "sum":
+            dc = dc.sum()
 
         return -dc
 
@@ -300,9 +307,78 @@ class SoftDiceLossSquared(nn.Module):
         return -dc
 
 
+class DiceFocalLoss(nn.Module):
+    def __init__(self, soft_dice_kwargs, focal_kwargs={'alpha': 0.5, 'gamma': 2}, aggregate="sum", square_dice=False,
+                 weight_focal=1, weight_dice=1, log_dice=False, ignore_label=None, class_weights=None):
+        """
+        CAREFUL. Weights for CE and Dice do not need to sum to one. You can set whatever you want.
+        :param soft_dice_kwargs:
+        :param focal_kwargs:
+        :param aggregate:
+        :param square_dice:
+        :param weight_focal:
+        :param weight_dice:
+        """
+        super(DiceFocalLoss, self).__init__()
+        reduction = "mean"
+        if ignore_label is not None or class_weights is not None:
+            assert not square_dice, 'not implemented'
+            reduction = 'none'
+
+        self.log_dice = log_dice
+        self.weight_dice = weight_dice
+        self.weight_focal = weight_focal
+        self.aggregate = aggregate
+        self.class_weights = None
+        if class_weights:
+            class_weights = np.array(class_weights).astype(float)
+            self.class_weights = maybe_to_torch(class_weights)
+            if torch.cuda.is_available():
+                self.class_weights = to_cuda(self.class_weights)
+
+        self.focal = FocalLoss(**focal_kwargs)
+
+        self.ignore_label = ignore_label
+
+        if not square_dice:
+            self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, reduction=reduction, **soft_dice_kwargs)
+        else:
+            self.dc = SoftDiceLossSquared(apply_nonlin=softmax_helper, **soft_dice_kwargs)
+        self.reduction = reduction
+
+    def forward(self, net_output, target):
+        """
+        target must be b, c, x, y(, z) with c=1
+        :param net_output:
+        :param target:
+        :return:
+        """
+        if self.ignore_label is not None:
+            assert target.shape[1] == 1, 'not implemented for one hot encoding'
+            mask = target != self.ignore_label
+            target[~mask] = 0
+            mask = mask.float()
+        else:
+            mask = None
+
+        dc_loss = self.dc(net_output, target, loss_mask=mask) if self.weight_dice != 0 else 0
+        if self.log_dice:
+            dc_loss = -torch.log(-dc_loss)
+
+        focal_loss = self.focal(net_output, target[:, 0].long()) if self.weight_focal != 0 else 0
+        if self.class_weights is not None:
+            dc_loss = (dc_loss).mean()
+
+        if self.aggregate == "sum":
+            result = self.weight_focal * focal_loss + self.weight_dice * dc_loss
+        else:
+            raise NotImplementedError("nah son")  # reserved for other stuff (later)
+        return result
+
+
 class DC_and_CE_loss(nn.Module):
     def __init__(self, soft_dice_kwargs, ce_kwargs, aggregate="sum", square_dice=False, weight_ce=1, weight_dice=1,
-                 log_dice=False, ignore_label=None):
+                 log_dice=False, ignore_label=None, class_weights=None):
         """
         CAREFUL. Weights for CE and Dice do not need to sum to one. You can set whatever you want.
         :param soft_dice_kwargs:
@@ -313,21 +389,33 @@ class DC_and_CE_loss(nn.Module):
         :param weight_dice:
         """
         super(DC_and_CE_loss, self).__init__()
-        if ignore_label is not None:
+        reduction = "mean"
+        if ignore_label is not None or class_weights is not None:
             assert not square_dice, 'not implemented'
-            ce_kwargs['reduction'] = 'none'
+            reduction = 'none'
         self.log_dice = log_dice
         self.weight_dice = weight_dice
         self.weight_ce = weight_ce
         self.aggregate = aggregate
-        self.ce = RobustCrossEntropyLoss(ignore_index=ignore_label if ignore_label is not None else -100, **ce_kwargs)
+        self.class_weights = None
+        if class_weights:
+            class_weights = np.array(class_weights).astype(float)
+            self.class_weights = maybe_to_torch(class_weights)
+            if torch.cuda.is_available():
+                self.class_weights = to_cuda(self.class_weights)
+
+        self.ce = RobustCrossEntropyLoss(
+            weight=self.class_weights,
+            ignore_index=ignore_label if ignore_label is not None else -100, **ce_kwargs
+        )
 
         self.ignore_label = ignore_label
 
         if not square_dice:
-            self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, **soft_dice_kwargs)
+            self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, reduction=reduction, **soft_dice_kwargs)
         else:
             self.dc = SoftDiceLossSquared(apply_nonlin=softmax_helper, **soft_dice_kwargs)
+        self.reduction = reduction
 
     def forward(self, net_output, target):
         """
@@ -349,9 +437,8 @@ class DC_and_CE_loss(nn.Module):
             dc_loss = -torch.log(-dc_loss)
 
         ce_loss = self.ce(net_output, target[:, 0].long()) if self.weight_ce != 0 else 0
-        # if self.ignore_label is not None: This is now done via ignore_index of torch.CrossEntropyLoss
-        #     ce_loss *= mask[:, 0]
-        #     ce_loss = ce_loss.sum() / mask.sum()
+        if self.class_weights is not None:
+            dc_loss = (dc_loss).mean()
 
         if self.aggregate == "sum":
             result = self.weight_ce * ce_loss + self.weight_dice * dc_loss

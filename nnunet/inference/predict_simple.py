@@ -14,6 +14,8 @@
 
 
 import argparse
+import json
+
 import torch
 
 from nnunet.inference.predict import predict_from_folder
@@ -50,7 +52,8 @@ def main():
     parser.add_argument('-m', '--model', help="2d, 3d_lowres, 3d_fullres or 3d_cascade_fullres. Default: 3d_fullres",
                         default="3d_fullres", required=False)
 
-    parser.add_argument('-p', '--plans_identifier', help='do not touch this unless you know what you are doing',
+    parser.add_argument('-p', '--plans_identifier', '--plans',
+                        help='do not touch this unless you know what you are doing',
                         default=default_plans_identifier, required=False)
 
     parser.add_argument('-f', '--folds', nargs='+', default='None',
@@ -106,17 +109,16 @@ def main():
     parser.add_argument("--all_in_gpu", type=str, default="None", required=False, help="can be None, False or True. "
                                                                                        "Do not touch.")
     parser.add_argument("--step_size", type=float, default=0.5, required=False, help="don't touch")
-    # parser.add_argument("--interp_order", required=False, default=3, type=int,
-    #                     help="order of interpolation for segmentations, has no effect if mode=fastest. Do not touch this.")
-    # parser.add_argument("--interp_order_z", required=False, default=0, type=int,
-    #                     help="order of interpolation along z is z is done differently. Do not touch this.")
-    # parser.add_argument("--force_separate_z", required=False, default="None", type=str,
-    #                     help="force_separate_z resampling. Can be None, True or False, has no effect if mode=fastest. "
-    #                          "Do not touch this.")
     parser.add_argument('-chk',
                         help='checkpoint name, default: model_final_checkpoint',
                         required=False,
                         default='model_final_checkpoint')
+    parser.add_argument('--trainer_kwargs', required=False, default="{}",
+                        help="Use a dictionary in string format to specify keyword arguments. This will get"
+                             " parsed into a dictionary, the values get correctly parsed to the data format"
+                             " and passed to the trainer. Example (backslash included): \n"
+                             r"--trainer_kwargs {\"class_weights\":[0,2.00990337,1.42540704,2.13387239,0.85529504,"
+                             r"0.592059,0.30040984,8.26874351],\"weight_dc\":0.3,\"weight_ce\":0.7}")
     parser.add_argument('--disable_mixed_precision', default=False, action='store_true', required=False,
                         help='Predictions are done with mixed precision by default. This improves speed and reduces '
                              'the required vram. If you want to disable mixed precision you can set this flag. Note '
@@ -134,9 +136,6 @@ def main():
     num_threads_nifti_save = args.num_threads_nifti_save
     disable_tta = args.disable_tta
     step_size = args.step_size
-    # interp_order = args.interp_order
-    # interp_order_z = args.interp_order_z
-    # force_separate_z = args.force_separate_z
     overwrite_existing = args.overwrite_existing
     mode = args.mode
     all_in_gpu = args.all_in_gpu
@@ -152,16 +151,6 @@ def main():
 
     assert model in ["2d", "3d_lowres", "3d_fullres", "3d_cascade_fullres"], "-m must be 2d, 3d_lowres, 3d_fullres or " \
                                                                              "3d_cascade_fullres"
-
-    # if force_separate_z == "None":
-    #     force_separate_z = None
-    # elif force_separate_z == "False":
-    #     force_separate_z = False
-    # elif force_separate_z == "True":
-    #     force_separate_z = True
-    # else:
-    #     raise ValueError("force_separate_z must be None, True or False. Given: %s" % force_separate_z)
-
     if lowres_segmentations == "None":
         lowres_segmentations = None
 
@@ -192,11 +181,12 @@ def main():
                                                 "are not supported. If you wish to have multiple parts, please " \
                                                 "run the 3d_lowres inference first (separately)"
         model_folder_name = join(network_training_output_dir, "3d_lowres", task_name, trainer_class_name + "__" +
-                                  args.plans_identifier)
+                                 args.plans_identifier)
         assert isdir(model_folder_name), "model output folder not found. Expected: %s" % model_folder_name
         lowres_output_folder = join(output_folder, "3d_lowres_predictions")
         predict_from_folder(model_folder_name, input_folder, lowres_output_folder, folds, False,
-                            num_threads_preprocessing, num_threads_nifti_save, None, part_id, num_parts, not disable_tta,
+                            num_threads_preprocessing, num_threads_nifti_save, None, part_id, num_parts,
+                            not disable_tta,
                             overwrite_existing=overwrite_existing, mode=mode, overwrite_all_in_gpu=all_in_gpu,
                             mixed_precision=not args.disable_mixed_precision,
                             step_size=step_size)
@@ -210,7 +200,7 @@ def main():
         trainer = trainer_class_name
 
     model_folder_name = join(network_training_output_dir, model, task_name, trainer + "__" +
-                              args.plans_identifier)
+                             args.plans_identifier)
     print("using model stored in ", model_folder_name)
     assert isdir(model_folder_name), "model output folder not found. Expected: %s" % model_folder_name
 
@@ -218,7 +208,8 @@ def main():
                         num_threads_nifti_save, lowres_segmentations, part_id, num_parts, not disable_tta,
                         overwrite_existing=overwrite_existing, mode=mode, overwrite_all_in_gpu=all_in_gpu,
                         mixed_precision=not args.disable_mixed_precision,
-                        step_size=step_size, checkpoint_name=args.chk)
+                        step_size=step_size, checkpoint_name=args.chk,
+                        trainer_kwargs=json.loads(args.trainer_kwargs.replace("\\", "")))
 
 
 if __name__ == "__main__":

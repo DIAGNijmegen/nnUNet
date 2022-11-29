@@ -367,6 +367,8 @@ class ExperimentPlanner(object):
                 schemes[i] = "CT"
             elif modalities[i] == 'noNorm':
                 schemes[i] = "noNorm"
+            elif modalities[i] == 'zeroToOne' or modalities[i] == '0-1':
+                schemes[i] = "zeroToOne"
             else:
                 schemes[i] = "nonCT"
         return schemes
@@ -426,7 +428,7 @@ class ExperimentPlanner(object):
         if os.path.isdir(join(self.preprocessed_output_folder, "gt_segmentations")):
             shutil.rmtree(join(self.preprocessed_output_folder, "gt_segmentations"))
         shutil_sol.copytree(join(self.folder_with_cropped_data, "gt_segmentations"),
-                        join(self.preprocessed_output_folder, "gt_segmentations"))
+                            join(self.preprocessed_output_folder, "gt_segmentations"))
         normalization_schemes = self.plans['normalization_schemes']
         use_nonzero_mask_for_normalization = self.plans['use_mask_for_norm']
         intensityproperties = self.plans['dataset_properties']['intensityproperties']
@@ -434,7 +436,7 @@ class ExperimentPlanner(object):
                                                          self.preprocessor_name, current_module="nnunet.preprocessing")
         assert preprocessor_class is not None
         preprocessor = preprocessor_class(normalization_schemes, use_nonzero_mask_for_normalization,
-                                         self.transpose_forward,
+                                          self.transpose_forward,
                                           intensityproperties)
         target_spacings = [i["current_spacing"] for i in self.plans_per_stage.values()]
         if self.plans['num_stages'] > 1 and not isinstance(num_threads, (list, tuple)):

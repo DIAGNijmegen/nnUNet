@@ -15,8 +15,6 @@
 import numpy as np
 import torch
 from torch import nn
-from nnunet.utilities.nd_softmax import softmax_helper
-from nnunet.training.network_training.nnUNetTrainerV2 import nnUNetTrainerV2
 
 
 # taken from https://github.com/JunMa11/SegLoss/blob/master/test/nnUNetV2/loss_functions/focal_loss.py

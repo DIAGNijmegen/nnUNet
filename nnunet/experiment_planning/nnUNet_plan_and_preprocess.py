@@ -74,6 +74,11 @@ def main():
                              "IDENTIFIER, the correct training command would be:\n"
                              "'nnUNet_train CONFIG TRAINER TASKID FOLD -p nnUNetPlans_pretrained_IDENTIFIER "
                              "-pretrained_weights FILENAME'")
+    parser.add_argument('--planner_kwargs', required=False, default="{}",
+                        help="Use a dictionary in string format to specify keyword arguments. This will get"
+                             " parsed into a dictionary, the values get correctly parsed to the data format"
+                             " and passed to the planner. Example (backslash included): \n"
+                             r"--planner_kwargs {\"encoder_name\": \"resnet18\"}")
 
     args = parser.parse_args()
     task_ids = args.task_ids
@@ -112,7 +117,8 @@ def main():
     search_in = join(nnunet.__path__[0], "experiment_planning")
 
     if planner_name3d is not None:
-        planner_3d = recursive_find_python_class([search_in], planner_name3d, current_module="nnunet.experiment_planning")
+        planner_3d = recursive_find_python_class([search_in], planner_name3d,
+                                                 current_module="nnunet.experiment_planning")
         if planner_3d is None:
             raise RuntimeError("Could not find the Planner class %s. Make sure it is located somewhere in "
                                "nnunet.experiment_planning" % planner_name3d)
@@ -120,7 +126,8 @@ def main():
         planner_3d = None
 
     if planner_name2d is not None:
-        planner_2d = recursive_find_python_class([search_in], planner_name2d, current_module="nnunet.experiment_planning")
+        planner_2d = recursive_find_python_class([search_in], planner_name2d,
+                                                 current_module="nnunet.experiment_planning")
         if planner_2d is None:
             raise RuntimeError("Could not find the Planner class %s. Make sure it is located somewhere in "
                                "nnunet.experiment_planning" % planner_name2d)
@@ -131,16 +138,17 @@ def main():
         print("\n\n\n", t)
         cropped_out_dir = os.path.join(nnUNet_cropped_data, t)
         preprocessing_output_dir_this_task = os.path.join(preprocessing_output_dir, t)
-        #splitted_4d_output_dir_task = os.path.join(nnUNet_raw_data, t)
-        #lists, modalities = create_lists_from_splitted_dataset(splitted_4d_output_dir_task)
+        # splitted_4d_output_dir_task = os.path.join(nnUNet_raw_data, t)
+        # lists, modalities = create_lists_from_splitted_dataset(splitted_4d_output_dir_task)
 
         # we need to figure out if we need the intensity propoerties. We collect them only if one of the modalities is CT
         dataset_json = load_json(join(cropped_out_dir, 'dataset.json'))
         modalities = list(dataset_json["modality"].values())
         collect_intensityproperties = True if (("CT" in modalities) or ("ct" in modalities)) else False
-        dataset_analyzer = DatasetAnalyzer(cropped_out_dir, overwrite=False, num_processes=tf)  # this class creates the fingerprint
-        _ = dataset_analyzer.analyze_dataset(collect_intensityproperties)  # this will write output files that will be used by the ExperimentPlanner
-
+        dataset_analyzer = DatasetAnalyzer(cropped_out_dir, overwrite=False,
+                                           num_processes=tf)  # this class creates the fingerprint
+        _ = dataset_analyzer.analyze_dataset(
+            collect_intensityproperties)  # this will write output files that will be used by the ExperimentPlanner
 
         maybe_mkdir_p(preprocessing_output_dir_this_task)
         shutil_sol.copyfile(join(cropped_out_dir, "dataset_properties.pkl"), preprocessing_output_dir_this_task)
@@ -154,14 +162,16 @@ def main():
             if args.overwrite_plans is not None:
                 assert args.overwrite_plans_identifier is not None, "You need to specify -overwrite_plans_identifier"
                 exp_planner = planner_3d(cropped_out_dir, preprocessing_output_dir_this_task, args.overwrite_plans,
-                                         args.overwrite_plans_identifier)
+                                         args.overwrite_plans_identifier,
+                                         **json.loads(args.trainer_kwargs.replace("\\", "")))
             else:
                 exp_planner = planner_3d(cropped_out_dir, preprocessing_output_dir_this_task)
             exp_planner.plan_experiment()
             if not dont_run_preprocessing:  # double negative, yooo
                 exp_planner.run_preprocessing(threads)
         if planner_2d is not None:
-            exp_planner = planner_2d(cropped_out_dir, preprocessing_output_dir_this_task)
+            exp_planner = planner_2d(cropped_out_dir, preprocessing_output_dir_this_task,
+                                     **json.loads(args.planner_kwargs.replace("\\", "")))
             exp_planner.plan_experiment()
             if not dont_run_preprocessing:  # double negative, yooo
                 exp_planner.run_preprocessing(threads)
@@ -169,4 +179,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

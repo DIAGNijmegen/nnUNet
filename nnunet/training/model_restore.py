@@ -34,14 +34,15 @@ def recursive_find_python_class(folder, trainer_name, current_module):
         for importer, modname, ispkg in pkgutil.iter_modules(folder):
             if ispkg:
                 next_current_module = current_module + "." + modname
-                tr = recursive_find_python_class([join(folder[0], modname)], trainer_name, current_module=next_current_module)
+                tr = recursive_find_python_class([join(folder[0], modname)], trainer_name,
+                                                 current_module=next_current_module)
             if tr is not None:
                 break
 
     return tr
 
 
-def restore_model(pkl_file, checkpoint=None, train=False, fp16=None):
+def restore_model(pkl_file, checkpoint=None, train=False, fp16=None, trainer_kwargs=None):
     """
     This is a utility function to load any nnUNet trainer from a pkl. It will recursively search
     nnunet.trainig.network_training for the file that contains the trainer and instantiate it with the arguments saved in the pkl file. If checkpoint
@@ -71,13 +72,15 @@ def restore_model(pkl_file, checkpoint=None, train=False, fp16=None):
             pass
 
     if tr is None:
-        raise RuntimeError("Could not find the model trainer specified in checkpoint in nnunet.trainig.network_training. If it "
-                           "is not located there, please move it or change the code of restore_model. Your model "
-                           "trainer can be located in any directory within nnunet.trainig.network_training (search is recursive)."
-                           "\nDebug info: \ncheckpoint file: %s\nName of trainer: %s " % (checkpoint, name))
+        raise RuntimeError(
+            "Could not find the model trainer specified in checkpoint in nnunet.trainig.network_training. If it "
+            "is not located there, please move it or change the code of restore_model. Your model "
+            "trainer can be located in any directory within nnunet.trainig.network_training (search is recursive)."
+            "\nDebug info: \ncheckpoint file: %s\nName of trainer: %s " % (checkpoint, name))
     assert issubclass(tr, nnUNetTrainer), "The network trainer was found but is not a subclass of nnUNetTrainer. " \
                                           "Please make it so!"
-
+    if trainer_kwargs is None:
+        trainer_kwargs = {}
     # this is now deprecated
     """if len(init) == 7:
         print("warning: this model seems to have been saved with a previous version of nnUNet. Attempting to load it "
@@ -87,7 +90,7 @@ def restore_model(pkl_file, checkpoint=None, train=False, fp16=None):
 
     # ToDo Fabian make saves use kwargs, please...
 
-    trainer = tr(*init)
+    trainer = tr(*init, **trainer_kwargs)
 
     # We can hack fp16 overwriting into the trainer without changing the init arguments because nothing happens with
     # fp16 in the init, it just saves it to a member variable
@@ -106,7 +109,8 @@ def load_best_model_for_inference(folder):
     return restore_model(pkl_file, checkpoint, False)
 
 
-def load_model_and_checkpoint_files(folder, folds=None, mixed_precision=None, checkpoint_name="model_best"):
+def load_model_and_checkpoint_files(folder, folds=None, mixed_precision=None, checkpoint_name="model_best",
+                                    trainer_kwargs=None):
     """
     used for if you need to ensemble the five models of a cross-validation. This will restore the model from the
     checkpoint in fold 0, load all parameters of the five folds in ram and return both. This will allow for fast
@@ -140,7 +144,8 @@ def load_model_and_checkpoint_files(folder, folds=None, mixed_precision=None, ch
     else:
         raise ValueError("Unknown value for folds. Type: %s. Expected: list of int, int, str or None", str(type(folds)))
 
-    trainer = restore_model(join(folds[0], "%s.model.pkl" % checkpoint_name), fp16=mixed_precision)
+    trainer = restore_model(join(folds[0], "%s.model.pkl" % checkpoint_name), fp16=mixed_precision,
+                            trainer_kwargs=trainer_kwargs)
     trainer.output_folder = folder
     trainer.output_folder_base = folder
     trainer.update_fold(default_fold)
@@ -152,7 +157,13 @@ def load_model_and_checkpoint_files(folder, folds=None, mixed_precision=None, ch
 
 
 if __name__ == "__main__":
-    pkl = "/home/fabian/PhD/results/nnUNetV2/nnUNetV2_3D_fullres/Task004_Hippocampus/fold0/model_best.model.pkl"
-    checkpoint = pkl[:-4]
-    train = False
-    trainer = restore_model(pkl, checkpoint, train)
+    folder = '/data/pathology/projects/pathology-endoaid/phase 3 - nnUNet/nnUNet_raw_data_base_7cl_revised/results/nnUNet/2d/Task507_endometrium_carcinoma_segmentation/nnUNetTrainerV2MultiScale__nnUNetPlansv2.1_MultiScale'
+    trainer, params = load_model_and_checkpoint_files(
+        folder,
+        folds=(0, 1, 2),
+        mixed_precision=None,
+        trainer_kwargs={'timm_encoder_kwargs': {'model_name': 'resnet18'},
+                        'data_origin': '/data/pathology/archives/endometrium/endoaid/wsis/dense annotations/tif/*',
+                        'spacing': 8.0}
+    )
+    print()

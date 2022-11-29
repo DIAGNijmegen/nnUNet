@@ -13,12 +13,10 @@
 #    limitations under the License.
 
 
-import shutil
-import nnunet.utilities.shutil_sol as shutil_sol
 from collections import OrderedDict
 from multiprocessing import Pool
 from time import sleep
-from typing import Tuple, List
+from typing import Tuple
 
 import matplotlib
 import numpy as np
@@ -28,6 +26,7 @@ from torch import nn
 from torch.optim import lr_scheduler
 
 import nnunet
+import nnunet.utilities.shutil_sol as shutil_sol
 from nnunet.configuration import default_num_threads
 from nnunet.evaluation.evaluator import aggregate_scores
 from nnunet.inference.segmentation_export import save_segmentation_nifti_from_softmax
@@ -296,6 +295,9 @@ class nnUNetTrainer(NetworkTrainer):
                 torch.cuda.empty_cache()
 
     def save_debug_information(self):
+        dct = self.get_debug_information()
+        save_json(dct, join(self.output_folder, "debug.json"))
+        shutil_sol.copyfile(self.plans_file, join(self.output_folder_base, "plans.pkl"))
         # saving some debug information
         dct = OrderedDict()
         for k in self.__dir__():
@@ -307,8 +309,7 @@ class nnUNetTrainer(NetworkTrainer):
         del dct['dataset']
         del dct['dataset_tr']
         del dct['dataset_val']
-        save_json(dct, join(self.output_folder, "debug.json"))
-        shutil_sol.copyfile(self.plans_file, join(self.output_folder_base, "plans.pkl"))
+        return dct
 
     def run_training(self):
         self.save_debug_information()
@@ -483,7 +484,8 @@ class nnUNetTrainer(NetworkTrainer):
                                                          use_sliding_window: bool = True, step_size: float = 0.5,
                                                          use_gaussian: bool = True, pad_border_mode: str = 'constant',
                                                          pad_kwargs: dict = None, all_in_gpu: bool = False,
-                                                         verbose: bool = True, mixed_precision: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+                                                         verbose: bool = True, mixed_precision: bool = True) -> Tuple[
+        np.ndarray, np.ndarray]:
         """
         :param data:
         :param do_mirroring:
@@ -710,6 +712,9 @@ class nnUNetTrainer(NetworkTrainer):
         global_dc_per_class = [i for i in [2 * i / (2 * i + j + k) for i, j, k in
                                            zip(self.online_eval_tp, self.online_eval_fp, self.online_eval_fn)]
                                if not np.isnan(i)]
+        self.all_val_eval_metrics_per_class.append(
+            {indx: 2 * i / (2 * i + j + k) for indx, (i, j, k) in
+             enumerate(zip(self.online_eval_tp, self.online_eval_fp, self.online_eval_fn))})
         self.all_val_eval_metrics.append(np.mean(global_dc_per_class))
 
         self.print_to_log_file("Average global foreground Dice:", [np.round(i, 4) for i in global_dc_per_class])
