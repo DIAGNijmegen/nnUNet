@@ -27,7 +27,7 @@ from batchgenerators.transforms.utility_transforms import RemoveLabelTransform, 
 
 from nnunet.training.data_augmentation.custom_transforms import Convert3DTo2DTransform, Convert2DTo3DTransform, \
     MaskTransform, ConvertSegmentationToRegionsTransform
-from nnunet.training.data_augmentation.diag.transforms.pathology_color_transforms import HedTransform, HsvTransform
+from nnunet.training.data_augmentation.diag.transforms.pathology_color_transforms import HedTransform, HsvTransform, Clip01
 from nnunet.training.data_augmentation.default_data_augmentation import default_3D_augmentation_params
 from nnunet.training.data_augmentation.downsampling import DownsampleSegForDSTransform3, DownsampleSegForDSTransform2
 from nnunet.training.data_augmentation.pyramid_augmentations import MoveSegAsOneHotToData, \
@@ -87,10 +87,10 @@ def get_moreDA_augmentation_pathology(dataloader_train, dataloader_val, patch_si
     tr_transforms.append(GaussianNoiseTransform(p_per_sample=0.1))
     tr_transforms.append(GaussianBlurTransform((0.5, 1.), different_sigma_per_channel=True, p_per_sample=0.2,
                                                p_per_channel=0.5))
-
+####
     tr_transforms.append(HedTransform())
     tr_transforms.append(HsvTransform())
-
+####
     tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.75, 1.25), p_per_sample=0.15))
 
     if params.get("do_additive_brightness"):
@@ -158,6 +158,10 @@ def get_moreDA_augmentation_pathology(dataloader_train, dataloader_val, patch_si
         else:
             tr_transforms.append(DownsampleSegForDSTransform2(deep_supervision_scales, 0, input_key='target',
                                                               output_key='target'))
+
+###
+    tr_transforms.append(Clip01())
+###
 
     tr_transforms.append(NumpyToTensor(['data', 'target'], 'float'))
     tr_transforms = Compose(tr_transforms)

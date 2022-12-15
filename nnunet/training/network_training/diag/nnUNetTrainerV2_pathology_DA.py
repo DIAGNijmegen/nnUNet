@@ -18,7 +18,7 @@ from typing import Tuple
 
 import numpy as np
 import torch
-from nnunet.training.data_augmentation.data_augmentation_moreDA_pathology import get_moreDA_augmentation_pathology
+from nnunet.training.data_augmentation.diag.data_augmentation_moreDA_pathology import get_moreDA_augmentation_pathology
 from nnunet.training.loss_functions.deep_supervision import MultipleOutputLoss2
 from nnunet.utilities.to_torch import maybe_to_torch, to_cuda
 from nnunet.network_architecture.generic_UNet import Generic_UNet

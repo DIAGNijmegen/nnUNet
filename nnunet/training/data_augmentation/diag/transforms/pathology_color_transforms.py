@@ -4,10 +4,33 @@ import numpy as np
 from scipy import linalg
 from skimage.util import dtype
 from skimage.exposure import rescale_intensity
+# import os
+import pickle
+def write_pickle(obj, file: str, mode: str = 'wb') -> None:
+    with open(file, mode) as f:
+        pickle.dump(obj, f)
+
+# Clip between 0 and 1
+class Clip01(AbstractTransform):
+    def __init__(self, data_key="data", label_key="seg", p_per_sample=1):
+        self.p_per_sample = p_per_sample
+        self.label_key = label_key
+        self.data_key = data_key
+
+    def __call__(self, **data_dict):
+        np.random.seed(np.random.randint(100))
+        data = data_dict.get(self.data_key)
+        # seg = data_dict.get(self.label_key)
+
+        for b in range(data.shape[0]):
+            if np.random.uniform() < self.p_per_sample:
+                data[b] = data[b].clip(0, 1)
+        data_dict[self.data_key] = data
+        return data_dict
 
 # HSV
 class HsvTransform(AbstractTransform):
-    def __init__(self, h_lim=0.4, s_lim=0.4, v_lim=0.4, data_key="data", label_key="seg", p_per_sample=1):
+    def __init__(self, h_lim=0.15, s_lim=0.15, v_lim=0.10, data_key="data", label_key="seg", p_per_sample=1):
         """
 
         """
@@ -25,7 +48,7 @@ class HsvTransform(AbstractTransform):
         seg = data_dict.get(self.label_key)
 
         for b in range(data.shape[0]):
-            if np.random.uniform() < self.p_per_sample:
+            if np.random.uniform() <= self.p_per_sample:
                 d = data[b].transpose(1, 2, 0)
                 d = self.hsv_transform(image=d)['image']
                 d = d.transpose(2, 0, 1)
@@ -261,7 +284,7 @@ class HedColorAugmenter():
 
 
 class HedTransform(AbstractTransform):
-    def __init__(self, factor=0.05, data_key="data", label_key="seg", p_per_sample=1):
+    def __init__(self, factor=0.04, data_key="data", label_key="seg", p_per_sample=1):
         """
 
         """
@@ -269,18 +292,20 @@ class HedTransform(AbstractTransform):
         self.label_key = label_key
         self.data_key = data_key
         # self.factor = factor
-        self.hed_transform = HedColorAugmenter((-factor, factor), (-factor, factor), (-factor, factor),
-                                               (-factor, factor), (-factor, factor), (-factor, factor),
+        self.hed_transform = HedColorAugmenter((-factor, factor), (-factor, factor), #hematox
+                                               (-factor, factor), (-factor, factor), #eosin
+                                               (-0, 0), (-0, 0), # dab
                                                cutoff_range=(0.15, 0.85))
 
     def __call__(self, **data_dict):
+        # write_pickle(data_dict, 'temp_stuff/data_dict3.pkl', 'wb')
         data = data_dict.get(self.data_key)
         seg = data_dict.get(self.label_key)
 
         for b in range(data.shape[0]):
-            if np.random.uniform() < self.p_per_sample:
+            if np.random.uniform() <= self.p_per_sample:
                 d = data[b]  # .transpose(1,2,0)
-                d = (d * 255).astype(np.uint8) #needed for hed
+                d = (d * 255).clip(0,255).astype(np.uint8) # clip prevents overflow after uint8 conversion. 256 needed for hed
                 self.hed_transform.randomize()
                 d = self.hed_transform.transform(d)
                 d = (d / 255).astype(np.float32) # back to float
