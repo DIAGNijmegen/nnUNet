@@ -30,7 +30,7 @@ class Clip01(AbstractTransform):
 
 # HSV
 class HsvTransform(AbstractTransform):
-    def __init__(self, h_lim=0.15, s_lim=0.15, v_lim=0.10, data_key="data", label_key="seg", p_per_sample=1):
+    def __init__(self, h_lim=0.075, s_lim=0.075, v_lim=0.05, data_key="data", label_key="seg", p_per_sample=1):
         """
 
         """
@@ -284,7 +284,7 @@ class HedColorAugmenter():
 
 
 class HedTransform(AbstractTransform):
-    def __init__(self, factor=0.04, data_key="data", label_key="seg", p_per_sample=1):
+    def __init__(self, factor=0.05, data_key="data", label_key="seg", p_per_sample=1):
         """
 
         """
@@ -294,7 +294,7 @@ class HedTransform(AbstractTransform):
         # self.factor = factor
         self.hed_transform = HedColorAugmenter((-factor, factor), (-factor, factor), #hematox
                                                (-factor, factor), (-factor, factor), #eosin
-                                               (-0, 0), (-0, 0), # dab
+                                               (-factor, factor), (-factor, factor), # dab
                                                cutoff_range=(0.15, 0.85))
 
     def __call__(self, **data_dict):

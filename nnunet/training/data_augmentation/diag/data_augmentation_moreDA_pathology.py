@@ -89,7 +89,7 @@ def get_moreDA_augmentation_pathology(dataloader_train, dataloader_val, patch_si
                                                p_per_channel=0.5))
 ####
     tr_transforms.append(HedTransform())
-    tr_transforms.append(HsvTransform())
+    # tr_transforms.append(HsvTransform())
 ####
     tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.75, 1.25), p_per_sample=0.15))
 
