@@ -231,9 +231,6 @@ class nnUNetTrainerV2(nnUNetTrainer):
         :param run_online_evaluation:
         :return:
         """
-        import matplotlib.pyplot as plt
-        plt.imshow([[2,5],[1,2]])
-        plt.show()
 
         data_dict = next(data_generator)
         data = data_dict['data']
