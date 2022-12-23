@@ -160,7 +160,8 @@ def get_moreDA_augmentation_pathology(dataloader_train, dataloader_val, patch_si
                                                               output_key='target'))
 
 ###
-    tr_transforms.append(Clip01())
+    # tr_transforms.append(Clip01())
+    print('\t\t\t\t\t\tJUST TO BE SURE>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 ###
 
     tr_transforms.append(NumpyToTensor(['data', 'target'], 'float'))
