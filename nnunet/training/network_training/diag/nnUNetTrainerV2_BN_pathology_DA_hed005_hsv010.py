@@ -34,10 +34,10 @@ from torch import nn
 from torch.cuda.amp import autocast
 from nnunet.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
-from nnunet.training.network_training.diag import nnUNetTrainerV2_BN_pathology_DA
+from nnunet.training.network_training.diag.nnUNetTrainerV2_BN_pathology_DA import nnUNetTrainerV2_BN_pathology_DA
 
 
-class nnUNetTrainerV2_BN_pathology_DA_hed005__hsv010(nnUNetTrainerV2_BN_pathology_DA):
+class nnUNetTrainerV2_BN_pathology_DA_hed005_hsv010(nnUNetTrainerV2_BN_pathology_DA):
     """
     Info for Fabian: same as internal nnUNetTrainerV2_2
     """
