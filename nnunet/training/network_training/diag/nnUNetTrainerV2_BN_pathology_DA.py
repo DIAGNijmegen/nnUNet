@@ -50,13 +50,19 @@ class nnUNetTrainerV2_BN_pathology_DA(nnUNetTrainer):
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         
+        '''
+        DAVID's paper: For HSV-light and HSV-strong, we used hue and saturation intensity ratios between [-0.1, 0.1] and [-1, 1], 
+        respectively. For HED-light and HED-strong, we used intensity ratios between [-0.05, 0.05] and [-0.2, 0.2], respectively, for all HED
+        channels.
+        '''
+
         ####### DA SETTINGS
         self.do_hed=True
-        self.hed_factor=0.04
+        self.hed_factor=0.05
         
         self.do_hsv = True
-        self.hsv_h_lim=0.15
-        self.hsv_s_lim=0.15 
+        self.hsv_h_lim=0.10
+        self.hsv_s_lim=0.10 
         self.hsv_v_lim=0.10
         #######
 
