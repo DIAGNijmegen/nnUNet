@@ -45,13 +45,7 @@ def get_moreDA_augmentation_pathology(dataloader_train, dataloader_val, patch_si
                             seeds_train=None, seeds_val=None, order_seg=1, order_data=3, deep_supervision_scales=None,
                             soft_ds=False,
                             classes=None, pin_memory=True, regions=None,
-                            use_nondetMultiThreadedAugmenter: bool = False,
-                            do_hed=True,
-                            hed_factor=0.04,
-                            do_hsv=True,
-                            hsv_h_lim=0.15,
-                            hsv_s_lim=0.15,
-                            hsv_v_lim=0.10):
+                            use_nondetMultiThreadedAugmenter: bool = False):
     assert params.get('mirror') is None, "old version of params, use new keyword do_mirror"
 
     tr_transforms = []
@@ -94,10 +88,8 @@ def get_moreDA_augmentation_pathology(dataloader_train, dataloader_val, patch_si
     tr_transforms.append(GaussianBlurTransform((0.5, 1.), different_sigma_per_channel=True, p_per_sample=0.2,
                                                p_per_channel=0.5))
 ####
-    if do_hed:
-        tr_transforms.append(HedTransform(factor=hed_factor))
-    if do_hsv:
-        tr_transforms.append(HsvTransform(h_lim=hsv_h_lim, s_lim=hsv_s_lim, v_lim=hsv_v_lim))
+    tr_transforms.append(HedTransform())
+    # tr_transforms.append(HsvTransform())
 ####
     tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.75, 1.25), p_per_sample=0.15))
 

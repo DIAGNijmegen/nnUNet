@@ -18,9 +18,7 @@ class Clip01(AbstractTransform):
         self.data_key = data_key
 
     def __call__(self, **data_dict):
-        np.random.seed(np.random.randint(100))
         data = data_dict.get(self.data_key)
-        # seg = data_dict.get(self.label_key)
 
         for b in range(data.shape[0]):
             if np.random.uniform() < self.p_per_sample:
@@ -294,7 +292,7 @@ class HedTransform(AbstractTransform):
         # self.factor = factor
         self.hed_transform = HedColorAugmenter((-factor, factor), (-factor, factor), #hematox
                                                (-factor, factor), (-factor, factor), #eosin
-                                               (-factor, factor), (-factor, factor), # dab
+                                               (-factor, factor), (-factor, factor), #dab
                                                cutoff_range=(0.15, 0.85))
 
     def __call__(self, **data_dict):

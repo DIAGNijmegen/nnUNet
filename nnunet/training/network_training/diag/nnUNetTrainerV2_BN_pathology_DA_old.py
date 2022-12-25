@@ -36,7 +36,7 @@ from nnunet.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
 
 
-class nnUNetTrainerV2_pathology_DA(nnUNetTrainer):
+class nnUNetTrainerV2_BN_pathology_DA(nnUNetTrainer):
     """
     Info for Fabian: same as internal nnUNetTrainerV2_2
     """
@@ -146,6 +146,8 @@ class nnUNetTrainerV2_pathology_DA(nnUNetTrainer):
             conv_op = nn.Conv2d
             dropout_op = nn.Dropout2d
             norm_op = nn.InstanceNorm2d
+
+        norm_op = nn.BatchNorm2d
 
         norm_op_kwargs = {'eps': 1e-5, 'affine': True}
         dropout_op_kwargs = {'p': 0, 'inplace': True}
