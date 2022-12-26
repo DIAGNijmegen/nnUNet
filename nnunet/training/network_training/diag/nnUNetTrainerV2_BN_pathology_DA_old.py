@@ -36,7 +36,7 @@ from nnunet.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
 
 
-class nnUNetTrainerV2_BN_pathology_DA(nnUNetTrainer):
+class nnUNetTrainerV2_BN_pathology_DA_old(nnUNetTrainer):
     """
     Info for Fabian: same as internal nnUNetTrainerV2_2
     """
