@@ -20,7 +20,7 @@ from nnunet.experiment_planning.common_utils import get_pool_and_conv_props
 from nnunet.network_architecture.generic_UNet import Generic_UNet
 import numpy as np
 
-class ExperimentPlanner2D_v21_RGB_z_score_default(ExperimentPlanner2D_v21):
+class ExperimentPlanner2D_v21_RGB_z_score_default_bs2_ps1024(ExperimentPlanner2D_v21):
     """
     used by tutorial nnunet.tutorials.custom_preprocessing
     """
