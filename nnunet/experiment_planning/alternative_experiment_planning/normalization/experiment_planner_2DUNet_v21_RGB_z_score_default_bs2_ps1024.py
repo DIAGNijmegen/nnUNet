@@ -14,25 +14,20 @@
 
 
 from nnunet.experiment_planning.experiment_planner_baseline_2DUNet_v21 import ExperimentPlanner2D_v21
+from nnunet.paths import *
 from copy import deepcopy
 from nnunet.experiment_planning.common_utils import get_pool_and_conv_props
 from nnunet.network_architecture.generic_UNet import Generic_UNet
-from nnunet.paths import *
 import numpy as np
 
-class ExperimentPlanner2D_v21_RGB_scaleTo_0_1_bs32_ps256(ExperimentPlanner2D_v21):
+class ExperimentPlanner2D_v21_RGB_z_score_default(ExperimentPlanner2D_v21):
     """
     used by tutorial nnunet.tutorials.custom_preprocessing
     """
     def __init__(self, folder_with_cropped_data, preprocessed_output_folder):
         super().__init__(folder_with_cropped_data, preprocessed_output_folder)
-        self.data_identifier = "nnUNet_RGB_scaleTo_0_1_bs32_ps256"
+        self.data_identifier = "nnUNet_RGB_z_score_default_bs2_ps1024"
         self.plans_fname = join(self.preprocessed_output_folder, self.data_identifier + "_plans_2D.pkl")
-
-        # The custom preprocessor class we intend to use is GenericPreprocessor_scale_uint8_to_0_1. It must be located
-        # in nnunet.preprocessing (any file and submodule) and will be found by its name. Make sure to always define
-        # unique names!
-        self.preprocessor_name = 'GenericPreprocessor_scale_uint8_to_0_1'
 
     def get_properties_for_stage(self, current_spacing, original_spacing, original_shape, num_cases,
                                  num_modalities, num_classes):
@@ -81,8 +76,8 @@ class ExperimentPlanner2D_v21_RGB_scaleTo_0_1_bs32_ps256(ExperimentPlanner2D_v21
                                                                 conv_per_stage=self.conv_per_stage)
             # print(new_shp)
 
-        batch_size = 32 #int(np.floor(ref / here) * 2)
-        input_patch_size = np.array([256, 256])#new_shp
+        batch_size = 2 #int(np.floor(ref / here) * 2)
+        input_patch_size = np.array([1024, 1024])#new_shp
 
         if batch_size < self.unet_min_batch_size:
             raise RuntimeError("This should not happen")
