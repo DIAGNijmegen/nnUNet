@@ -20,13 +20,13 @@ from nnunet.network_architecture.generic_UNet import Generic_UNet
 from nnunet.paths import *
 import numpy as np
 
-class ExperimentPlanner2D_v21_RGB_scaleTo_0_1_bs8_ps512(ExperimentPlanner2D_v21):
+class ExperimentPlanner2D_v21_RGB_scaleTo_0_1_bs2_ps1024(ExperimentPlanner2D_v21):
     """
     used by tutorial nnunet.tutorials.custom_preprocessing
     """
     def __init__(self, folder_with_cropped_data, preprocessed_output_folder):
         super().__init__(folder_with_cropped_data, preprocessed_output_folder)
-        self.data_identifier = "nnUNet_RGB_scaleTo_0_1_bs8_ps512"
+        self.data_identifier = "nnUNet_RGB_scaleTo_0_1_bs2_ps1024"
         self.plans_fname = join(self.preprocessed_output_folder, self.data_identifier + "_plans_2D.pkl")
 
         # The custom preprocessor class we intend to use is GenericPreprocessor_scale_uint8_to_0_1. It must be located
@@ -81,8 +81,8 @@ class ExperimentPlanner2D_v21_RGB_scaleTo_0_1_bs8_ps512(ExperimentPlanner2D_v21)
                                                                 conv_per_stage=self.conv_per_stage)
             # print(new_shp)
 
-        batch_size = 8 # int(np.floor(ref / here) * 2)
-        input_patch_size = np.array([512, 512])#new_shp
+        batch_size = 2 # int(np.floor(ref / here) * 2)
+        input_patch_size = np.array([1024, 1024])#new_shp
 
         if batch_size < self.unet_min_batch_size:
             raise RuntimeError("This should not happen")
