@@ -315,7 +315,7 @@ class DC_and_CE_loss(nn.Module):
         super(DC_and_CE_loss, self).__init__()
         if ignore_label is not None:
             assert not square_dice, 'not implemented'
-            ce_kwargs['reduction'] = 'none'
+            # ce_kwargs['reduction'] = 'none' # dont know why this is here, breaks code because with deep supervision the outputs are of different shapes and can therefore not be added
         self.log_dice = log_dice
         self.weight_dice = weight_dice
         self.weight_ce = weight_ce
