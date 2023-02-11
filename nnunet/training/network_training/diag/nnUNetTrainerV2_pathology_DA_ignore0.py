@@ -34,9 +34,9 @@ from torch import nn
 from torch.cuda.amp import autocast
 from nnunet.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
+from nnunet.training.loss_functions.dice_loss import DC_and_CE_loss
 
-
-class nnUNetTrainerV2_pathology_DA(nnUNetTrainer):
+class nnUNetTrainerV2_pathology_DA_ignore0(nnUNetTrainer):
     """
     Info for Fabian: same as internal nnUNetTrainerV2_2
     """
@@ -51,6 +51,9 @@ class nnUNetTrainerV2_pathology_DA(nnUNetTrainer):
         self.ds_loss_weights = None
 
         self.pin_memory = True
+
+        self.batch_dice = batch_dice
+        self.loss = DC_and_CE_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {}, ignore_label=0)
 
     def initialize(self, training=True, force_load_plans=False):
         """
