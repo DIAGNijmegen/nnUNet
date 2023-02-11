@@ -34,7 +34,7 @@ from torch import nn
 from torch.cuda.amp import autocast
 from nnunet.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
-from nnunet.training.network_training.diag.nnUNetTrainerV2_BN_pathology_DA import nnUNetTrainerV2_BN_pathology_DA_ignore0
+from nnunet.training.network_training.diag.nnUNetTrainerV2_BN_pathology_DA_ignore0 import nnUNetTrainerV2_BN_pathology_DA_ignore0
 
 class nnUNetTrainerV2_BN_pathology_DA_ignore0_hed005(nnUNetTrainerV2_BN_pathology_DA_ignore0):
     """
